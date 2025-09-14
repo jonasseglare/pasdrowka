@@ -3,6 +3,20 @@
   <head>
     <title>Pasdrowka - A cute password manager</title>
   </head>
+  <style>
+   table.grid {
+       border-collapse: collapse;     /* makes adjacent borders render as single lines */
+       border: 1px solid #000;       /* outer border (optional) */
+       //width: 100%;
+   }
+
+   table.grid th,
+   table.grid td {
+       border: 1px solid #000;       /* single 1px lines between cells */
+       padding: 8px;
+       text-align: center;
+   }
+  </style>
   <body id="root">
     <h1>A cute password manager</h1>
     <script src="impl.js"></script>

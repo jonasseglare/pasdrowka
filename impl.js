@@ -7,7 +7,7 @@ function charRange(charPair) {
   return dst;
 }
 
-let symbols = ".,-";
+let specialSymbols = ".,-";
 let digits = charRange("09");
 let uppercaseLetters = charRange("AZ");
 let lowercaseLetters = charRange("az");
@@ -120,30 +120,54 @@ Atom.prototype.addListener = function(k, f) {
 
 var globalState = new Atom(initGlobalState);
 
-function generateInputMatrix(config) {
-  let inputSymbols0 = config["inputSymbols"];
-  console.log(inputSymbols0);
-  let symbols = shuffle(inputSymbols0);
-  let size = config["inputSize"];
-  check(size[0]*size[1]-1 === symbols.length);
+function populateMatrix(size, symbols) {
+  check(size[0]*size[1] === symbols.length);
   dst = new Array(size[0]);
   for (var i = 0; i < size[0]; i++) {
     dst[i] = new Array(size[1]);
   }
-  dst[0][0] = null;
   for (var i = 0; i < symbols.length; i++) {
-    let i1 = i+1;
-    let row = Math.floor(i1/size[1]);
-    let col = i1 - row*size[1];
+    let row = Math.floor(i/size[1]);
+    let col = i - row*size[1];
     dst[row][col] = symbols[i];
   }
   return dst;
 }
 
+function generateInputMatrix(config) {
+  let inputSymbols0 = config["inputSymbols"];
+  let symbols = shuffle(inputSymbols0);
+  let size = config["inputSize"];
+  return populateMatrix(size, [null].concat(symbols));
+}
+
+function sampleN(n, symbols) {
+  let len = symbols.length;
+  let m = Math.floor((n-1)/len) + 1;
+  let k = m-1;
+  var dst = shuffle(symbols).slice(0, n - k*len);
+  for (var i = 0; i < m-1; i++) {
+    dst = dst.concat(symbols);
+  }
+  return shuffle(dst);
+}
+
+
+function generateOutputMatrix(config) {
+  let size = config["outputSize"];
+  let outputSymbols = sampleN(
+    size[0]*size[1],
+    config["outputSymbols"]);
+  return populateMatrix(size, outputSymbols);
+}
+
 function generateNew(state) {
   let config = state["config"];
-  return assocIn(state, ["data", "inputMatrix"],
-                 generateInputMatrix(config));
+  return assocIn(assocIn(
+    state, ["data", "inputMatrix"],
+    generateInputMatrix(config)),
+                 ["data", "outputMatrix"],
+                 generateOutputMatrix(config));
 }
 
 function shuffle(src) {
@@ -283,6 +307,21 @@ function tests() {
   check(10 == generateInputSymbols(11).length);
   check(36 == generateInputSymbols(37).length);
   check(35 == generateInputSymbols(35).length);
+
+  for (var j = 0; j < 2; j++) {
+    var n = 6 + j;
+    var symbols = sampleN(n, [0, 1, 2]);
+    var freqs = [0, 0, 0];
+    for (var i in symbols) {
+      freqs[symbols[i]] += 1;
+    }
+    var freqSum = 0;
+    for (var i in freqs) {
+      check(2 <= freqs[i]);
+      freqSum += freqs[i];
+    }
+    check(freqSum == n);
+  }
   
   console.log("All tests pass");
 }

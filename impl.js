@@ -89,9 +89,9 @@ function assocIn(dst, path, x) {
 let initGlobalState = {
   "view": "generate",
   "config": {
-    "inputSize": [5, 5],
-    "outputSize": [7, 11],
-    "inputSymbols": generateInputSymbols(24),
+    "inputSize": [6, 6],
+    "outputSize": [11, 7],
+    "inputSymbols": generateInputSymbols(35),
     "outputSymbols": allLettersAndDigits
   },
   "data": {
@@ -231,6 +231,20 @@ function miniHiccup(input) {
   }
 }
 
+function matrixHiccup(matrix) {
+  return ["table", {"class": "grid"}].concat(
+    matrix.map(function(row) {
+      return ["tr"].concat(
+        row.map(function(cell) {
+          if (!cell) {
+            return ["td"];
+          } else {
+            return ["td", cell];
+          }
+        }));
+    }));
+}
+
 function renderViewGenerate(root, state) {
   removeAllChildren(root);
   let header = document.createElement("h2");
@@ -247,20 +261,13 @@ function renderViewGenerate(root, state) {
   if (inputMatrix !== null) {
     root.appendChild(
       miniHiccup(
-        ["table", {"class": "grid"}].concat(
-          inputMatrix.map(function(row) {
-            return ["tr"].concat(
-              row.map(function(cell) {
-                if (!cell) {
-                  return ["td"];
-                } else {
-                  return ["td", cell];
-                }
-              }));
-          }))));
+        matrixHiccup(inputMatrix)));
   }
-  
+  let outputMatrix = state["data"]["outputMatrix"];
   root.appendChild(miniHiccup(["h3", "Output Matrix"]));
+  if (outputMatrix !== null) {
+    root.appendChild(miniHiccup(matrixHiccup(outputMatrix)));
+  }
 }
 
 function renderState(state) {

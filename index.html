@@ -1,24 +1,34 @@
 <!doctype html>
 <html lang="en-US">
   <head>
-    <title>Pasdrowka - A cute password manager</title>
+    <title>Pasdrówka - A cute password manager</title>
+    <!--  -->
+    <link rel="stylesheet" href="style.css" />
   </head>
-  <style>
-   table.grid {
-       border-collapse: collapse;     /* makes adjacent borders render as single lines */
-       border: 1px solid #000;       /* outer border (optional) */
-       //width: 100%;
-   }
-
-   table.grid th,
-   table.grid td {
-       border: 1px solid #000;       /* single 1px lines between cells */
-       padding: 8px;
-       text-align: center;
-   }
-  </style>
-  <body id="root">
-    <h1>A cute password manager</h1>
+  <body>
+    <h1>Pasdrówka - A cute password manager</h1>
+    <p>Pasdrowka is a paper-based password manager configured with a secret key. It converts text hints to a hashed string used as a password.</p>
+    <h2>Configuration</h2>
+    <div id="configform">
+      <fieldset>
+        <legend>Input symbols</legend>
+        <label for="inputsymbols">Input symbols</label>
+        <input id="inputsymbols" value="ABCDEFGHIJKLMNOPQRSTUVWXYZ"></input>
+      </fieldset>
+      <fieldset>
+        <legend>Output symbols 1</legend>
+        <label for="outputsymbols_out1">Output symbols</label>
+        <input id="outputsymbols_out1" value="abcdefghijklmnopqrstuvwxyz">
+        <input id="randomcase_out1" type="checkbox">
+        <label for="randomcase_out1">Random case</label>
+        <button onclick="removeOut(1)" class="invisible">Remove</button>
+      </fieldset>
+    </div>
+    <div>
+      <button onclick="addRow()">Add output row</button>
+      <button>Generate</button>
+    </div>
+    <h2>Result</h2>
     <script src="impl.js"></script>
   </body>
 </html>

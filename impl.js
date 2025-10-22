@@ -1,346 +1,135 @@
-function charRange(charPair) {
-  var dst = [];
-  for (var i = charPair.charCodeAt(0); i <= charPair.charCodeAt(1);
-       i++) {
-    dst.push(String.fromCharCode(i));
+const defaultOutputSymbols = "abcdefghijklmnopqrstuvwxyz0123456789,.-/!";
+
+function threadFirst() {
+  let result = arguments[0];
+  for (let i = 1; i < arguments.length; i++) {
+    let expr = arguments[i];
+    let f = expr[0];
+    let args1 = expr.slice(1);
+    let args = [result].concat(args1);
+    result = f.apply(null, args);
   }
+  return result;
+}
+
+function withText(dst, text) {
+  dst.appendChild(document.createTextNode(text));
   return dst;
 }
 
-let specialSymbols = ".,-";
-let digits = charRange("09");
-let uppercaseLetters = charRange("AZ");
-let lowercaseLetters = charRange("az");
-let baseInputSymbols = digits.concat(uppercaseLetters);
-let allLetters = lowercaseLetters.concat(uppercaseLetters);
-let allLettersAndDigits = allLetters.concat(digits);
-
-function removeSymbols(dst, symbolsToRemove) {
-  let s = new Set(symbolsToRemove);
-  return dst.filter(function(x) {
-    return !s.has(x);
-  });
-}
-
-//console.log(removeSymbols(digits, charRange("04")));
-
-function generateInputSymbols(n) {
-  var replacements = [["S", "Z", "SZ"],
-                      ["Q", "K", "QK"],
-                      ["B", "P", "BP"]];
-  var setsToTry = [baseInputSymbols, uppercaseLetters, digits];
-  for (var i in setsToTry) {
-    var coll = setsToTry[i].slice();
-    if (coll.length <= n) {
-      return coll;
-    }
-    for (var j in replacements) {
-      var rep = replacements[j];
-      coll = removeSymbols(coll, rep.slice(0, 2));
-      coll.push(rep[2]);
-      if (coll.length <= n) {
-        return coll;
-      }
-    }
-  }
-  return null;
-} 
-
-function assoc(src, k, v) {
-  if (!src) {
-    return {k: v};
-  }
-  var dst = {};
-  for (var k0 in src) {
-    dst[k0] = src[k0];
-  }
-  dst[k] = v;
+function withAttribute(dst, k, v) {
+  dst.setAttribute(k, v);
   return dst;
 }
 
-function get(src, k, v0) {
-  return k in src? src[k] : v0;
+function legendText(index) {
+  return "Output symbols " + index;
 }
 
-function update(dst, k, f) {
-  return assoc(dst, k, f(get(dst, k)));
+function outputSymbolsKey(index) {
+  return "outputsymbols_out" + index;
 }
 
-function updateIn(dst, path, f) {
-  if (path.length == 0) {
-    return f(dst);
+function randomCaseKey(index) {
+  return "randomcase_out" + index;
+}
+
+function removeCall(index) {
+  return "removeOut(" + index + ")";
+}
+
+function updateRemoveButtonsVisibility() {
+  let buttons = document
+    .getElementById("configform")
+    .querySelectorAll("button");
+
+  if (buttons.length == 1) {
+    buttons[0].setAttribute("class", "invisible");
   } else {
-    let k = path[0];
-    let y = assoc(
-      dst, k,
-      updateIn(get(dst, k, {}),
-             path.slice(1),
-             f));
-    return y;
+    buttons.forEach(function(b) {
+      b.removeAttribute("class");
+    });
   }
 }
 
-function assocIn(dst, path, x) {
-  return updateIn(dst, path, function(_) {return x;});
-}
-
-
-
-let initGlobalState = {
-  "view": "generate",
-  "config": {
-    "inputSize": [6, 6],
-    "outputSize": [11, 7],
-    "inputSymbols": generateInputSymbols(35),
-    "outputSymbols": allLettersAndDigits
-  },
-  "data": {
-    "inputMatrix": null,
-    "outputMatrix": null
-  },
-};
-
-function Atom(state) {
-  this.state = state
-  this.listeners = {};
-}
-
-Atom.prototype.swap = function(f) {
-  let oldState = this.state;
-  this.state = f(oldState);
-  for (var k in this.listeners) {
-    let f = this.listeners[k];
-    f(k, oldState, this.state);
+function removeOut(index) {
+  let dst = document.getElementById("configform");
+  let children = dst.children;
+  dst.removeChild(children[index]);
+  children = dst.children;
+  for (let i = index; i < children.length; i++) {
+    let el = children[i];
+    let legend = el.querySelector("legend");
+    legend.firstChild.nodeValue = legendText(i);
+    let labels = el.querySelectorAll("label");
+    labels[0].setAttribute("for", outputSymbolsKey(i));
+    labels[1].setAttribute("for", randomCaseKey(i));
+    let inputs = el.querySelectorAll("input");
+    inputs[0].setAttribute("id", outputSymbolsKey(i));
+    inputs[1].setAttribute("id", outputSymbolsKey(i));
+    el.querySelector("button").setAttribute(
+      "onclick", removeCall(i));
   }
+  updateRemoveButtonsVisibility();
 }
 
-Atom.prototype.addListener = function(k, f) {
-  this.listeners[k] = f;
-}
-
-var globalState = new Atom(initGlobalState);
-
-function populateMatrix(size, symbols) {
-  check(size[0]*size[1] === symbols.length);
-  dst = new Array(size[0]);
-  for (var i = 0; i < size[0]; i++) {
-    dst[i] = new Array(size[1]);
-  }
-  for (var i = 0; i < symbols.length; i++) {
-    let row = Math.floor(i/size[1]);
-    let col = i - row*size[1];
-    dst[row][col] = symbols[i];
-  }
-  return dst;
-}
-
-function generateInputMatrix(config) {
-  let inputSymbols0 = config["inputSymbols"];
-  let symbols = shuffle(inputSymbols0);
-  let size = config["inputSize"];
-  return populateMatrix(size, [null].concat(symbols));
-}
-
-function sampleN(n, symbols) {
-  let len = symbols.length;
-  let m = Math.floor((n-1)/len) + 1;
-  let k = m-1;
-  var dst = shuffle(symbols).slice(0, n - k*len);
-  for (var i = 0; i < m-1; i++) {
-    dst = dst.concat(symbols);
-  }
-  return shuffle(dst);
-}
-
-
-function generateOutputMatrix(config) {
-  let size = config["outputSize"];
-  let outputSymbols = sampleN(
-    size[0]*size[1],
-    config["outputSymbols"]);
-  return populateMatrix(size, outputSymbols);
-}
-
-function generateNew(state) {
-  let config = state["config"];
-  return assocIn(assocIn(
-    state, ["data", "inputMatrix"],
-    generateInputMatrix(config)),
-                 ["data", "outputMatrix"],
-                 generateOutputMatrix(config));
-}
-
-function shuffle(src) {
-  let n = src.length;
-  let dst = new Array(n);
-  for (var i = 0; i < n; i++) {
-    dst[i] = src[i];
-  }
-  for (var i = n-1; i >= 1; i--) {
-    let j = Math.floor(Math.random()*i);
-    let tmp = dst[i];
-    dst[i] = dst[j];
-    dst[j] = tmp;
-  }
-  return dst;
-}
-
-function dispatchEvent(event) {
-  globalState.swap(function(state) {
-    let eventType = event["type"];
-    if (eventType === "generate") {
-      return generateNew(state);
+function unusedOutputSymbols(form) {
+  let dst = new Set();
+  let children = form.children;
+  let usedSet = new Set();
+  for (let i = 1; i < children.length; i++) {
+    let el = document.getElementById(outputSymbolsKey(i));
+    let s = el.value;
+    for (const c of s) {
+      usedSet.add(c);
     }
-  });
-}
-
-function removeAllChildren(root) {
-  while (root.firstChild) {
-    root.removeChild(root.lastChild);
   }
-}
-
-function check(condition, message) {
-  if (!condition) {
-    throw message || "Check failed";
-  }
-}
-
-function miniHiccup(input) {
-  if (input && input.constructor === Array) {
-    let n = input.length;
-    let first = input[0];
-    check(typeof first === 'string');
-    let dst = document.createElement(first);
-    let offset = 1;
-    if (input[1] && input[1].constructor == Object) {
-      let attrs = input[1];
-      for (var k in attrs) {
-        dst.setAttribute(k, attrs[k]);
-      }
-      offset += 1;
+  let unused = "";
+  for (const c of defaultOutputSymbols) {
+    if (!usedSet.has(c)) {
+      unused += c;
     }
-    for (var i = offset; i < n; i++) {
-      dst.appendChild(miniHiccup(input[i]));
-    }
-    return dst;
-  } else if (typeof input === 'string') {
-    return document.createTextNode(input);
-  } else {
-    return miniHiccup('' + input);
   }
+  return unused;
 }
 
-function matrixHiccup(matrix) {
-  return ["table", {"class": "grid"}].concat(
-    matrix.map(function(row) {
-      return ["tr"].concat(
-        row.map(function(cell) {
-          if (!cell) {
-            return ["td"];
-          } else {
-            return ["td", cell];
-          }
-        }));
-    }));
-}
-
-function renderViewGenerate(root, state) {
-  removeAllChildren(root);
-  let header = document.createElement("h2");
-  header.appendChild(document.createTextNode("Generate Password"));
-  let button = miniHiccup(["button", "Generate"]);
-  button.onclick = function() {
-    dispatchEvent({"type": "generate"});
-  };
-  root.appendChild(header);
-  root.appendChild(button);
-  root.appendChild(miniHiccup(["h3", {"style": "color: red"},
-                               "Input Matrix"]));
-  let inputMatrix = state["data"]["inputMatrix"];
-  if (inputMatrix !== null) {
-    root.appendChild(
-      miniHiccup(
-        matrixHiccup(inputMatrix)));
-  }
-  let outputMatrix = state["data"]["outputMatrix"];
-  root.appendChild(miniHiccup(["h3", "Output Matrix"]));
-  if (outputMatrix !== null) {
-    root.appendChild(miniHiccup(matrixHiccup(outputMatrix)));
-  }
-
-  root.appendChild(miniHiccup(["h3", "Configure"]));
-  root.appendChild(["div",
-                    ["label",
-                     {"for" "inputsymbols"},
-                     "Input symbols:"],
-                    ["input",
-                     {"type" "text",
-                      "id" "inputsymbols",
-                      "name" "inputsymbols"}]]);
-}
-
-function renderState(state) {
-  let root = document.getElementById("root");
-  if (root === null) {
-    console.error("No root found");
-  }
-  if (state["view"] === "generate") {
-    renderViewGenerate(root, state);
-  } else {
-    throw new Error("Invalid state");
-  }
-}
-
-renderState(globalState.state);
-globalState.addListener(
-  "render", function(k0, oldState, newState) {
-    renderState(newState);
-  });
-
-
-
-function tests() {
-  let x = {};
-  check(119 == assoc(x, "a", 119)["a"]);
-  check(0 == Object.keys(x).length, "Wrong length");
-  check(119, get({"a": 119}, "a", 234));
-  check(234, get({"a": 119}, "b", 234));
-  let y = updateIn({}, ["a"], function(x) {
-    return assoc(x, "b", 119); //{"b": 119};
-  });
-  check(119 == y["a"]["b"]);
-  let z = update({"a": 3}, "a", function(x) {
-    return x + 1;
-  });
-  check(4 == z["a"]);
-  let cfg = initGlobalState["config"];
-  let inputSize = cfg["inputSize"];
-  check(inputSize[0]*inputSize[1]-1 ===
-        cfg["inputSymbols"].length);
-  check(25 == generateInputSymbols(25).length);
-  check(24 == generateInputSymbols(24).length);
-  check(23 == generateInputSymbols(23).length);
-  check(10 == generateInputSymbols(11).length);
-  check(36 == generateInputSymbols(37).length);
-  check(35 == generateInputSymbols(35).length);
-
-  for (var j = 0; j < 2; j++) {
-    var n = 6 + j;
-    var symbols = sampleN(n, [0, 1, 2]);
-    var freqs = [0, 0, 0];
-    for (var i in symbols) {
-      freqs[symbols[i]] += 1;
-    }
-    var freqSum = 0;
-    for (var i in freqs) {
-      check(2 <= freqs[i]);
-      freqSum += freqs[i];
-    }
-    check(freqSum == n);
-  }
+function addRow() {
+  let dst = document.getElementById("configform");
+  let unused = unusedOutputSymbols(dst);
   
-  console.log("All tests pass");
+  let index = dst.childElementCount;
+  let fieldset = document.createElement("fieldset");
+  let legend = threadFirst(
+    document.createElement("legend"),
+    [withText, legendText(index)]);
+  let symKey = outputSymbolsKey(index);
+  let caseKey = randomCaseKey(index);
+  let label = threadFirst(
+    document.createElement("label"),
+    [withText, "Output symbols"],
+    [withAttribute, "for", symKey]);
+  let symbols = threadFirst(
+    document.createElement("input"),
+    [withAttribute, "id", symKey],
+    [withAttribute, "value", unused]);
+  let remove = threadFirst(
+    document.createElement("button"),
+    [withText, "Remove"],
+    [withAttribute, "onclick", removeCall(index)]);
+  let caseInput = threadFirst(
+    document.createElement("input"),
+    [withAttribute, "id", caseKey],
+    [withAttribute, "type", "checkbox"]);
+  let caseLabel = threadFirst(
+    document.createElement("label"),
+    [withText, "Random case"],
+    [withAttribute, "for", caseKey]);
+  fieldset.appendChild(legend);
+  fieldset.appendChild(label);
+  fieldset.appendChild(symbols);
+  fieldset.appendChild(caseInput);
+  fieldset.appendChild(caseLabel);
+  fieldset.appendChild(remove);
+  dst.appendChild(fieldset);
+  updateRemoveButtonsVisibility();
 }
-
-tests();

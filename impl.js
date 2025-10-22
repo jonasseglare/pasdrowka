@@ -54,21 +54,14 @@ function updateRemoveButtonsVisibility() {
 
 function removeOut(index) {
   let dst = document.getElementById("configform");
-  let children = dst.children;
-  dst.removeChild(children[index]);
+  //let children = dst.children;
+  let toRemove = document.getElementById("fs_output" + index);
+  dst.removeChild(toRemove);
   children = dst.children;
-  for (let i = index; i < children.length; i++) {
+  for (let i = 1; i < children.length; i++) {
     let el = children[i];
     let legend = el.querySelector("legend");
     legend.firstChild.nodeValue = legendText(i);
-    let labels = el.querySelectorAll("label");
-    labels[0].setAttribute("for", outputSymbolsKey(i));
-    labels[1].setAttribute("for", randomCaseKey(i));
-    let inputs = el.querySelectorAll("input");
-    inputs[0].setAttribute("id", outputSymbolsKey(i));
-    inputs[1].setAttribute("id", outputSymbolsKey(i));
-    el.querySelector("button").setAttribute(
-      "onclick", removeCall(i));
   }
   updateRemoveButtonsVisibility();
 }
@@ -93,12 +86,28 @@ function unusedOutputSymbols(form) {
   return unused;
 }
 
+
+let fsOutputRe = /fs_output(\d+)$/;
+
+function getMaxOutputId() {
+  let fieldsets = document.getElementById("configform").children;
+  return parseInt(
+    fieldsets[fieldsets.length-1]
+      .id.match(fsOutputRe)[1]);
+}
+
+function getNextOutputId() {
+  return 1 + getMaxOutputId();
+}
+
 function addRow() {
   let dst = document.getElementById("configform");
   let unused = unusedOutputSymbols(dst);
   
-  let index = dst.childElementCount;
-  let fieldset = document.createElement("fieldset");
+  let index = getNextOutputId();
+  let fieldset = threadFirst(
+    document.createElement("fieldset"),
+    [withAttribute, "id", "fs_output" + index]);
   let legend = threadFirst(
     document.createElement("legend"),
     [withText, legendText(index)]);
@@ -132,4 +141,27 @@ function addRow() {
   fieldset.appendChild(remove);
   dst.appendChild(fieldset);
   updateRemoveButtonsVisibility();
+}
+
+function getState() {
+  let inputSymbols = document.getElementById("inputsymbols").value;
+  let outputSymbolSets = [];
+  let children = Array.from(
+    document.getElementById("configform").children);
+  children.forEach((child, i) => {
+    if (1 <= i) {
+      let input = child.querySelector("input");
+      console.log(input.value);
+    }
+  });
+  return {
+    "inputSymbols": inputSymbols,
+    //"outputSymbols": outputRows
+  };
+}
+
+console.log(getMaxOutputId());
+
+function generate() {
+  console.log(getState());
 }

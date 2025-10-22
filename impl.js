@@ -268,6 +268,16 @@ function renderViewGenerate(root, state) {
   if (outputMatrix !== null) {
     root.appendChild(miniHiccup(matrixHiccup(outputMatrix)));
   }
+
+  root.appendChild(miniHiccup(["h3", "Configure"]));
+  root.appendChild(["div",
+                    ["label",
+                     {"for" "inputsymbols"},
+                     "Input symbols:"],
+                    ["input",
+                     {"type" "text",
+                      "id" "inputsymbols",
+                      "name" "inputsymbols"}]]);
 }
 
 function renderState(state) {

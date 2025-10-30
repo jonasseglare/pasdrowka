@@ -1,3 +1,9 @@
+.error {
+    color: red;
+}
 .invisible {
   visibility: hidden;
+}
+label {
+    margin: 20px 0
 }

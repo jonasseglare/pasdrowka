@@ -19,19 +19,33 @@
         <legend>Output symbols 1</legend>
         <label for="outputsymbols_out1">Output symbols</label>
         <input id="outputsymbols_out1" value="abcdefghijklmnopqrstuvwxyz">
-        <input id="randomcase_out1" type="checkbox">
+        <input id="randomcase_out1" type="checkbox" checked="true">
         <label for="randomcase_out1">Random case</label>
+        
+        <label for="rate_out1">Rate</label>
+        <input id="rate_out1" value="100%" oninput="outputRowChanged(1)"></input>
+
+        <p class="error" id="errors_out1"></p>
+        
         <button onclick="removeOut(1)" class="invisible">Remove</button>
       </fieldset>
     </div>
     <div>
       <button onclick="addRow()">Add output row</button>
       <fieldset>
-        <button onclick="generate()">Generate</button>
+        <button onclick="generate()" id="genbutton">Generate</button>
+        <p class="error" id="totalerror"></p>
       </fieldset>
     </div>
+    <h2>Spec</h2>
+    <div id="fs_spec">
+      <label for="inputspec">Input spec</label>
+      <input id="inputspec"></input>
+      <label for="outputspec">Output spec</label>
+      <input id="outputspec"></input>
+    </div>
     <h2>Result</h2>
-    <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg" id="drawing">
       <rect x="0" y="0" width="210" height="297" fill="white"/>
       <rect x="10" y="10" width="190" height="277" fill="black"/>
     </svg>

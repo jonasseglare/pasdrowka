@@ -58,7 +58,6 @@ function refreshTotalError() {
   node.appendChild(document.createTextNode(
     totalErrors.join(", ")));
   let isOK = totalErrors.length == 0;
-  console.log("IS OK?", isOK);
   document.getElementById("genbutton").disabled = !isOK;
 }
 
@@ -298,12 +297,17 @@ function getConfig() {
   if (!found) {
     totalErrors.push("There must be at least one output row with rate 100%");
   }
+  let inputSpec = document.getElementById("inputspec").value;
+  let outputSpec = document.getElementById("outputspec").value;
+  
 
   return {
     "inputSymbols": inputSymbols,
     "outputRows": outputRows,
     "stateCount": inputSymbols.length + 1,
-    "totalErrors": totalErrors
+    "totalErrors": totalErrors,
+    "inputSpec": inputSpec,
+    "outputSpec": outputSpec
   };
 }
 
@@ -320,17 +324,28 @@ function createCircle(cx, cy, radius) {
   return dst;
 }
 
-function renderDisk(cx, cy, drawing) {
+function createLine(x0, y0, x1, y1) {
+  let dst = document.createElementNS(svgNS, "line");
+  dst.setAttribute("x1", x0);
+  dst.setAttribute("y1", y0);
+  dst.setAttribute("x2", x1);
+  dst.setAttribute("y2", y1);
+  dst.setAttribute("stroke", "black");
+  dst.setAttribute("stroke-width", 0.5);  
+  return dst;
 }
 
 class DrawingContext {
-  constructor(svg) {
+  constructor(svg, cfg) {
     this.svg = svg;
     this.margin = 10;
     this.outerRadius = 40;
     this.textHeight = 10;
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
+    this.cfg = cfg;
+    this.stateCount = cfg["stateCount"];
+    this.angleStep = 2.0*Math.PI/this.stateCount;
   }
 
   get cx0() {
@@ -340,19 +355,31 @@ class DrawingContext {
   get cy0() {
     return this.cx0;
   }
-  
+
   renderDisk(cx, cy) {
     let outerCircle = createCircle(cx, cy, this.outerRadius);
     let innerCircle = createCircle(cx, cy, this.innerRadius);
     this.svg.appendChild(outerCircle);
-    this.svg.appendChild(innerCircle);  
+    this.svg.appendChild(innerCircle);
+    let omega = this.angleStep;
+    for (var i = 0; i < this.stateCount; i++) {
+      let cosx = Math.cos(i*omega);
+      let sinx = Math.sin(i*omega);
+      let x0 = cx + this.innerRadius*cosx;
+      let y0 = cy + this.innerRadius*sinx;
+      let x1 = cx + this.outerRadius*cosx;
+      let y1 = cy + this.outerRadius*sinx;
+      this.svg.appendChild(createLine(x0, y0, x1, y1));
+    }
   }
 }
 
 function renderState() {
+  let cfg = getConfig();
+  console.log("cfg", cfg);
   let svg = document.getElementById("drawing");
   drawing.replaceChildren();
-  let d = new DrawingContext(drawing);
+  let d = new DrawingContext(drawing, cfg);
   d.renderDisk(d.cx0, d.cy0);
 }
 

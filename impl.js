@@ -123,11 +123,6 @@ function updateRemoveButtonsVisibility() {
   }
 }
 
-function updateRateVisibility() {
-  //let rateLabels = document.getElementById("configform");
-  
-}
-
 function getOutputRowIds() {
   let form = document.getElementById("configform")
   let children = Array.from(form.children).slice(1);
@@ -325,21 +320,40 @@ function createCircle(cx, cy, radius) {
   return dst;
 }
 
+function renderDisk(cx, cy, drawing) {
+}
+
+class DrawingContext {
+  constructor(svg) {
+    this.svg = svg;
+    this.margin = 10;
+    this.outerRadius = 40;
+    this.textHeight = 10;
+    this.innerRadius = this.outerRadius - this.textHeight;
+    this.svg = svg;
+  }
+
+  get cx0() {
+    return this.margin + this.outerRadius;
+  }
+
+  get cy0() {
+    return this.cx0;
+  }
+  
+  renderDisk(cx, cy) {
+    let outerCircle = createCircle(cx, cy, this.outerRadius);
+    let innerCircle = createCircle(cx, cy, this.innerRadius);
+    this.svg.appendChild(outerCircle);
+    this.svg.appendChild(innerCircle);  
+  }
+}
+
 function renderState() {
   let svg = document.getElementById("drawing");
-
-  let margin = 10;
-  let outerRadius = 40;
-  let textHeight = 10;
-  let innerRadius = outerRadius - textHeight;
-  let c0 = margin + outerRadius;
-  
-  let outerCircle = createCircle(c0, c0, outerRadius);
-  let innerCircle = createCircle(c0, c0, innerRadius);
-  
   drawing.replaceChildren();
-  drawing.appendChild(outerCircle);
-  drawing.appendChild(innerCircle);  
+  let d = new DrawingContext(drawing);
+  d.renderDisk(d.cx0, d.cy0);
 }
 
 function shuffleArray(array) {
@@ -356,13 +370,76 @@ function shuffleArray(array) {
   return shuffled;
 }
 
+function div1(a, b) {
+  return Math.floor((a - 1)/b) + 1;
+}
+
+function randomCase(c) {
+  if (Math.random() < 0.5) {
+    return c;
+  }
+  let d = c.toLowerCase();
+  return c === d? c.toUpperCase() : d;
+}
+
+function identity(x) {
+  return x;
+}
+
+function generateOutputsForRow(stateCount, outputRow) {
+  let dst = new Array(stateCount);
+  let outputSymbols = outputRow["outputSymbols"];
+  let rc = outputRow["randomCase"]? randomCase : identity;
+  if (outputSymbols.length <= 0) {
+    return dst;
+  }
+  let n = Math.round(outputRow["rate"]*stateCount);
+  if (n <= 0) {
+    return dst;
+  }
+  let rep = div1(n, outputSymbols.length);
+  let tmp = [];
+  for (var i = 0; i < rep-1; i++) {
+    tmp = tmp.concat(outputSymbols);
+  }
+  tmp = tmp.concat(shuffleArray(outputSymbols)).slice(0, n);
+  for (var i = 0; i < n; i++) {
+    dst[i] = rc(tmp[i]);
+  }
+  return shuffleArray(dst);
+}
+
 function generate() {
   let cfg = getConfig();
   console.log(cfg);
+
+  let stateCount = cfg["stateCount"];
+  
   let inputSpec = document.getElementById("inputspec");
   inputSpec.value = shuffleArray(cfg["inputSymbols"]).join("");
+
+  let outputSpec = document.getElementById("outputspec");
+
+  let dst = new Array(stateCount);
+  for (var i = 0; i < stateCount; i++) {
+    dst[i] = "";
+  }
+  cfg["outputRows"].forEach(function(row) {
+    let tmp = generateOutputsForRow(stateCount, row);
+    for (var i = 0; i < stateCount; i++) {
+      let c = tmp[i];
+      if (c) {
+        dst[i] += c;
+      }
+    }
+  });
+  let outputValue = dst.join(" ");
+  outputSpec.value = outputValue;
   
   renderState();
 }
+
+document.getElementById("renderState").addEventListener(
+  "click", renderState);
 
 refreshUI();

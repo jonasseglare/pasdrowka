@@ -380,7 +380,7 @@ class DrawingContext {
     }
   }
 
-  renderSymbols(cx, cy, symbols) {
+  renderSymbols(cx, cy, baseRadius, symbols) {
     for (var i = 0; i < this.stateCount; i++) {
       let c = symbols[i];
       if (!c) {
@@ -390,7 +390,7 @@ class DrawingContext {
       let angleDeg = angleRad * 180 / Math.PI + 90;
       let cosx = Math.cos(angleRad);
       let sinx = Math.sin(angleRad);
-      let r = 0.5 * (this.innerRadius + this.outerRadius);
+      let r = baseRadius + 0.5*this.textHeight;
       let x = cx + r * cosx;
       let y = cy + r * sinx;
       let textNode = threadFirst(
@@ -424,9 +424,9 @@ function renderState() {
   drawing.replaceChildren();
   let d = new DrawingContext(drawing, cfg);
   d.renderDisk(d.cx0, d.cy0);
-  d.renderSymbols(d.cx0, d.cy0, cfg["inputSpec"]);
+  d.renderSymbols(d.cx0, d.cy0, d.innerRadius, cfg["inputSpec"]);
   d.renderDisk(d.cx1, d.cy1);
-  d.renderSymbols(d.cx1, d.cy1, cfg["outputSpec"]);
+  d.renderSymbols(d.cx1, d.cy1, d.innerRadius, cfg["outputSpec"]);
 }
 
 function shuffleArray(array) {

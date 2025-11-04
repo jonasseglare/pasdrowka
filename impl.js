@@ -344,7 +344,7 @@ class DrawingContext {
     this.svg = svg;
     this.margin = 10;
     this.outerRadius = 40;
-    this.textHeight = 10;
+    this.textHeight = 8;
     this.fontSize = 6;
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
@@ -363,17 +363,19 @@ class DrawingContext {
     return i*this.angleStep - Math.PI/2;
   }
 
-  renderDisk(cx, cy) {
+  renderDisk(cx, cy, thickness) {
+    let innerRadius = this.outerRadius - thickness;
+    console.log("innerRadius", innerRadius);
     let outerCircle = createCircle(cx, cy, this.outerRadius);
-    let innerCircle = createCircle(cx, cy, this.innerRadius);
+    let innerCircle = createCircle(cx, cy, innerRadius);
     this.svg.appendChild(outerCircle);
     this.svg.appendChild(innerCircle);
     for (var i = 0; i < this.stateCount; i++) {
       let angle = this.angleAtIndex(i);
       let cosx = Math.cos(angle);
       let sinx = Math.sin(angle);
-      let x0 = cx + this.innerRadius*cosx;
-      let y0 = cy + this.innerRadius*sinx;
+      let x0 = cx + innerRadius*cosx;
+      let y0 = cy + innerRadius*sinx;
       let x1 = cx + this.outerRadius*cosx;
       let y1 = cy + this.outerRadius*sinx;
       this.svg.appendChild(createLine(x0, y0, x1, y1));
@@ -415,18 +417,28 @@ class DrawingContext {
   svg.setAttribute("viewBox", `0 0 ${widthMM} ${heightMM}`);
 }*/
 
+function maxStringLength(arr) {
+  return arr.reduce((max, s) => Math.max(max, s.length), 0);
+}
+
 function renderState() {
   let cfg = getConfig();
-  console.log("cfg", cfg);
+  
+  let outputSpec = cfg["outputSpec"];
+  let maxOutLen = maxStringLength(outputSpec);
+
   let svg = document.getElementById("drawing");
   // Set SVG to 100x100mm, so radius 40 is 40mm on paper
   //setSVGPhysicalSize(svg, 100, 100);
   drawing.replaceChildren();
+
+
   let d = new DrawingContext(drawing, cfg);
-  d.renderDisk(d.cx0, d.cy0);
+  let thickness = d.textHeight*maxOutLen;
+  d.renderDisk(d.cx0, d.cy0, thickness);
   d.renderSymbols(d.cx0, d.cy0, d.innerRadius, cfg["inputSpec"]);
-  d.renderDisk(d.cx1, d.cy1);
-  d.renderSymbols(d.cx1, d.cy1, d.innerRadius, cfg["outputSpec"]);
+  d.renderDisk(d.cx1, d.cy1, thickness);
+  d.renderSymbols(d.cx1, d.cy1, d.innerRadius, outputSpec);
 }
 
 function shuffleArray(array) {

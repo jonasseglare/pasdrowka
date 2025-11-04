@@ -260,6 +260,10 @@ function parseSymbols(src) {
   return Array.from(src).map(function(c) {return c;});
 }
 
+function splitStringBySpaces(src) {
+  return src.split(/\s+/);
+}
+
 function getConfig() {
   let inputSymbols = parseSymbols(
     document.getElementById("inputsymbols").value);
@@ -307,7 +311,7 @@ function getConfig() {
     "stateCount": inputSymbols.length + 1,
     "totalErrors": totalErrors,
     "inputSpec": inputSpec,
-    "outputSpec": outputSpec
+    "outputSpec": splitStringBySpaces(outputSpec)
   };
 }
 
@@ -341,6 +345,7 @@ class DrawingContext {
     this.margin = 10;
     this.outerRadius = 40;
     this.textHeight = 10;
+    this.fontSize = 6;
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
     this.cfg = cfg;
@@ -356,15 +361,19 @@ class DrawingContext {
     return this.cx0;
   }
 
+  angleAtIndex(i) {
+    return i*this.angleStep - Math.PI/2;
+  }
+
   renderDisk(cx, cy) {
     let outerCircle = createCircle(cx, cy, this.outerRadius);
     let innerCircle = createCircle(cx, cy, this.innerRadius);
     this.svg.appendChild(outerCircle);
     this.svg.appendChild(innerCircle);
-    let omega = this.angleStep;
     for (var i = 0; i < this.stateCount; i++) {
-      let cosx = Math.cos(i*omega);
-      let sinx = Math.sin(i*omega);
+      let angle = this.angleAtIndex(i);
+      let cosx = Math.cos(angle);
+      let sinx = Math.sin(angle);
       let x0 = cx + this.innerRadius*cosx;
       let y0 = cy + this.innerRadius*sinx;
       let x1 = cx + this.outerRadius*cosx;
@@ -372,15 +381,54 @@ class DrawingContext {
       this.svg.appendChild(createLine(x0, y0, x1, y1));
     }
   }
+
+  renderSymbols(symbols) {
+    for (var i = 0; i < this.stateCount; i++) {
+      let c = symbols[i];
+      if (!c) {
+        continue;
+      }
+      let angleRad = this.angleAtIndex(i + 0.5);
+      let angle = this.angleAtIndex(i);
+      let angleDeg = angleRad * 180 / Math.PI + 90;
+      let cosx = Math.cos(angleRad);
+      let sinx = Math.sin(angleRad);
+      let r = 0.5 * (this.innerRadius + this.outerRadius);
+      let x = this.cx0 + r * cosx;
+      let y = this.cy0 + r * sinx;
+      let textNode = threadFirst(
+        document.createElementNS(svgNS, "text"),
+        [withAttribute, "x", x],
+        [withAttribute, "y", y],
+        [withAttribute, "font-size", this.fontSize],
+        [withAttribute, "font-family", "'Fira Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'"],
+        [withAttribute, "text-anchor", "middle"],
+        [withAttribute, "dominant-baseline", "middle"],
+        [withAttribute, "transform", `rotate(${angleDeg},${x},${y})`],
+        [withText, c]
+      );
+      this.svg.appendChild(textNode);
+    }
+  }
+}
+
+function setSVGPhysicalSize(svg, widthMM, heightMM) {
+  svg.setAttribute("width", widthMM + "mm");
+  svg.setAttribute("height", heightMM + "mm");
+  svg.setAttribute("viewBox", `0 0 ${widthMM} ${heightMM}`);
 }
 
 function renderState() {
   let cfg = getConfig();
   console.log("cfg", cfg);
   let svg = document.getElementById("drawing");
+  // Set SVG to 100x100mm, so radius 40 is 40mm on paper
+  setSVGPhysicalSize(svg, 100, 100);
   drawing.replaceChildren();
   let d = new DrawingContext(drawing, cfg);
   d.renderDisk(d.cx0, d.cy0);
+  d.renderSymbols(cfg["inputSpec"]);
+
 }
 
 function shuffleArray(array) {
@@ -468,5 +516,24 @@ function generate() {
 
 document.getElementById("renderState").addEventListener(
   "click", renderState);
+
+// Add Print SVG button
+function printSVG() {
+  const svg = document.getElementById("drawing");
+  if (!svg) return;
+  const svgData = new XMLSerializer().serializeToString(svg);
+  const win = window.open("", "_blank");
+  win.document.write(`<!DOCTYPE html><html><head><title>Print SVG</title></head><body style='margin:0'>${svg.outerHTML}<script>window.onload=function(){window.print();}</script></body></html>`);
+  win.document.close();
+}
+
+// Create and insert the button after the renderState button
+const renderBtn = document.getElementById("renderState");
+const printBtn = document.createElement("button");
+printBtn.textContent = "Print SVG";
+printBtn.type = "button";
+printBtn.style.marginLeft = "0.5em";
+printBtn.addEventListener("click", printSVG);
+renderBtn.parentNode.insertBefore(printBtn, renderBtn.nextSibling);
 
 refreshUI();

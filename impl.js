@@ -351,15 +351,13 @@ class DrawingContext {
     this.cfg = cfg;
     this.stateCount = cfg["stateCount"];
     this.angleStep = 2.0*Math.PI/this.stateCount;
+    let offset = this.margin + this.outerRadius;
+    this.cx0 = offset;
+    this.cy0 = this.cx0;
+    this.cx1 = this.cx0;
+    this.cy1 = this.cy0 + 2.0*this.outerRadius + this.margin;
   }
 
-  get cx0() {
-    return this.margin + this.outerRadius;
-  }
-
-  get cy0() {
-    return this.cx0;
-  }
 
   angleAtIndex(i) {
     return i*this.angleStep - Math.PI/2;
@@ -382,20 +380,19 @@ class DrawingContext {
     }
   }
 
-  renderSymbols(symbols) {
+  renderSymbols(cx, cy, symbols) {
     for (var i = 0; i < this.stateCount; i++) {
       let c = symbols[i];
       if (!c) {
         continue;
       }
       let angleRad = this.angleAtIndex(i + 0.5);
-      let angle = this.angleAtIndex(i);
       let angleDeg = angleRad * 180 / Math.PI + 90;
       let cosx = Math.cos(angleRad);
       let sinx = Math.sin(angleRad);
       let r = 0.5 * (this.innerRadius + this.outerRadius);
-      let x = this.cx0 + r * cosx;
-      let y = this.cy0 + r * sinx;
+      let x = cx + r * cosx;
+      let y = cy + r * sinx;
       let textNode = threadFirst(
         document.createElementNS(svgNS, "text"),
         [withAttribute, "x", x],
@@ -412,23 +409,24 @@ class DrawingContext {
   }
 }
 
-function setSVGPhysicalSize(svg, widthMM, heightMM) {
+/*function setSVGPhysicalSize(svg, widthMM, heightMM) {
   svg.setAttribute("width", widthMM + "mm");
   svg.setAttribute("height", heightMM + "mm");
   svg.setAttribute("viewBox", `0 0 ${widthMM} ${heightMM}`);
-}
+}*/
 
 function renderState() {
   let cfg = getConfig();
   console.log("cfg", cfg);
   let svg = document.getElementById("drawing");
   // Set SVG to 100x100mm, so radius 40 is 40mm on paper
-  setSVGPhysicalSize(svg, 100, 100);
+  //setSVGPhysicalSize(svg, 100, 100);
   drawing.replaceChildren();
   let d = new DrawingContext(drawing, cfg);
   d.renderDisk(d.cx0, d.cy0);
-  d.renderSymbols(cfg["inputSpec"]);
-
+  d.renderSymbols(d.cx0, d.cy0, cfg["inputSpec"]);
+  d.renderDisk(d.cx1, d.cy1);
+  d.renderSymbols(d.cx1, d.cy1, cfg["outputSpec"]);
 }
 
 function shuffleArray(array) {

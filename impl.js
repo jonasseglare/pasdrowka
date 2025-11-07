@@ -323,7 +323,7 @@ function createCircle(cx, cy, radius) {
   dst.setAttribute("cy", cy);
   dst.setAttribute("r", radius);
   dst.setAttribute("stroke", "black");
-  dst.setAttribute("stroke-width", 0.5);
+  dst.setAttribute("stroke-width", 0.25);
   dst.setAttribute("fill", "transparent");
   return dst;
 }
@@ -335,17 +335,17 @@ function createLine(x0, y0, x1, y1) {
   dst.setAttribute("x2", x1);
   dst.setAttribute("y2", y1);
   dst.setAttribute("stroke", "black");
-  dst.setAttribute("stroke-width", 0.5);  
+  dst.setAttribute("stroke-width", 0.25);  
   return dst;
 }
 
 class DrawingContext {
   constructor(svg, cfg) {
     this.svg = svg;
-    this.margin = 10;
-    this.outerRadius = 40;
-    this.textHeight = 7;
-    this.fontSize = 6;
+    this.margin = 7.5;
+    this.outerRadius = 30;
+    this.textHeight = 5.25;
+    this.fontSize = 4.5;
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
     this.cfg = cfg;

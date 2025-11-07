@@ -552,11 +552,71 @@ function printSVG() {
   if (!svg) return;
   const svgData = new XMLSerializer().serializeToString(svg);
   const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Print SVG</title></head><body style='margin:0'>${svg.outerHTML}<script>window.onload=function(){window.print();}</script></body></html>`);
+  win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Print SVG</title>
+  <style>
+    @page {
+      margin: 0;
+      size: A4 portrait;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 210mm;
+      height: 297mm;
+      overflow: hidden;
+    }
+    svg {
+      display: block;
+      width: 210mm;
+      height: 297mm;
+    }
+    @media print {
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 210mm;
+        height: 297mm;
+        overflow: hidden;
+      }
+      svg {
+        display: block;
+        width: 210mm;
+        height: 297mm;
+        page-break-after: avoid;
+      }
+    }
+  </style>
+</head>
+<body>${svg.outerHTML}<script>window.onload=function(){window.print();}</script></body>
+</html>`);
   win.document.close();
 }
 
-// Create and insert the button after the renderState button
+// Download SVG function
+function downloadSVG() {
+  const svg = document.getElementById("drawing");
+  if (!svg) return;
+  const svgData = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([svgData], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pasdrowka.svg";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Create and insert the buttons after the renderState button
 const renderBtn = document.getElementById("renderState");
 const printBtn = document.createElement("button");
 printBtn.textContent = "Print SVG";
@@ -564,5 +624,12 @@ printBtn.type = "button";
 printBtn.style.marginLeft = "0.5em";
 printBtn.addEventListener("click", printSVG);
 renderBtn.parentNode.insertBefore(printBtn, renderBtn.nextSibling);
+
+const downloadBtn = document.createElement("button");
+downloadBtn.textContent = "Download SVG";
+downloadBtn.type = "button";
+downloadBtn.style.marginLeft = "0.5em";
+downloadBtn.addEventListener("click", downloadSVG);
+renderBtn.parentNode.insertBefore(downloadBtn, printBtn.nextSibling);
 
 refreshUI();

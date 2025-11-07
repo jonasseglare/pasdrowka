@@ -344,7 +344,7 @@ class DrawingContext {
     this.svg = svg;
     this.margin = 10;
     this.outerRadius = 40;
-    this.textHeight = 8;
+    this.textHeight = 7;
     this.fontSize = 6;
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
@@ -421,10 +421,27 @@ function maxStringLength(arr) {
   return arr.reduce((max, s) => Math.max(max, s.length), 0);
 }
 
+function splitOutputSpec(outputSpec) {
+  let maxOutLen = maxStringLength(outputSpec);
+  let dst = new Array(maxOutLen);
+  let n = outputSpec.length;
+  for (var i = 0; i < maxOutLen; i++) {
+    dst[i] = new Array(n);
+  }
+  for (var i = 0; i < n; i++) {
+    var s = outputSpec[i];
+    for (var j = 0; j < s.length; j++) {
+      dst[j][i] = s[j];
+    }
+  }
+  return dst;
+}
+
 function renderState() {
   let cfg = getConfig();
   
   let outputSpec = cfg["outputSpec"];
+  let splitOutput = splitOutputSpec(outputSpec);
   let maxOutLen = maxStringLength(outputSpec);
 
   let svg = document.getElementById("drawing");
@@ -438,7 +455,9 @@ function renderState() {
   d.renderDisk(d.cx0, d.cy0, thickness);
   d.renderSymbols(d.cx0, d.cy0, d.innerRadius, cfg["inputSpec"]);
   d.renderDisk(d.cx1, d.cy1, thickness);
-  d.renderSymbols(d.cx1, d.cy1, d.innerRadius, outputSpec);
+  for (var j = 0; j < maxOutLen; j++) {
+    d.renderSymbols(d.cx1, d.cy1, d.innerRadius - j*d.textHeight, splitOutput[j]);
+  }
 }
 
 function shuffleArray(array) {

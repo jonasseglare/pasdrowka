@@ -1,4 +1,4 @@
-const defaultOutputSymbols = "abcdefghijklmnopqrstuvwxyz0123456789,.-/!";
+const defaultOutputSymbols = "abcdefghijklmnpqrstuvwxyz123456789,.-/!";
 
 function threadFirst() {
   let result = arguments[0];
@@ -265,8 +265,8 @@ function splitStringBySpaces(src) {
 }
 
 function getConfig() {
-  let inputSymbols = parseSymbols(
-    document.getElementById("inputsymbols").value);
+  let inputValue = document.getElementById("inputsymbols").value;
+  let inputSymbols = parseSymbols(inputValue);
   let children = Array.from(
     document.getElementById("configform").children);
   let errorFound = false;
@@ -287,6 +287,10 @@ function getConfig() {
   });
 
   let totalErrors = [];
+
+  if (/\s/.test(inputValue)) {
+    totalErrors.push("Whitespace not allowed in input value");
+  }
   
   let found = false;
   outputRows.forEach(function(row) {
@@ -341,11 +345,12 @@ function createLine(x0, y0, x1, y1) {
 
 class DrawingContext {
   constructor(svg, cfg) {
+    let scale = 1.0;
     this.svg = svg;
-    this.margin = 7.5;
-    this.outerRadius = 30;
-    this.textHeight = 5.25;
-    this.fontSize = 4.5;
+    this.margin = 7.5*scale;
+    this.outerRadius = 30*scale;
+    this.textHeight = 5.25*scale;
+    this.fontSize = 4.0*scale;
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
     this.cfg = cfg;
@@ -356,6 +361,7 @@ class DrawingContext {
     this.cy0 = this.cx0;
     this.cx1 = this.cx0;
     this.cy1 = this.cy0 + 2.0*this.outerRadius + this.margin;
+    this.dotRadius = 2.0*scale;
   }
 
 
@@ -365,7 +371,6 @@ class DrawingContext {
 
   renderDisk(cx, cy, thickness) {
     let innerRadius = this.outerRadius - thickness;
-    console.log("innerRadius", innerRadius);
     let outerCircle = createCircle(cx, cy, this.outerRadius);
     let innerCircle = createCircle(cx, cy, innerRadius);
     this.svg.appendChild(outerCircle);
@@ -380,13 +385,29 @@ class DrawingContext {
       let y1 = cy + this.outerRadius*sinx;
       this.svg.appendChild(createLine(x0, y0, x1, y1));
     }
+    this.svg.appendChild(
+      threadFirst(
+        document.createElementNS(svgNS, "circle"),
+        [withAttribute, "cx", cx],
+        [withAttribute, "cy", cy],
+        [withAttribute, "r", this.dotRadius],
+        [withAttribute, "fill", "black"]
+      ));
   }
 
-  renderSymbols(cx, cy, baseRadius, symbols) {
+  renderSymbols(cx, cy, baseRadius, symbols, withCharColor) {
     for (var i = 0; i < this.stateCount; i++) {
       let c = symbols[i];
       if (!c) {
         continue;
+      }
+      let color = "black";
+      if (withCharColor) {
+        if (/[A-Z]/.test(c)) {
+          color = "blue";
+        } else if (/[a-z]/.test(c)) {
+          color = "red";
+        }
       }
       let angleRad = this.angleAtIndex(i + 0.5);
       let angleDeg = angleRad * 180 / Math.PI + 90;
@@ -402,6 +423,7 @@ class DrawingContext {
         [withAttribute, "font-size", this.fontSize],
         [withAttribute, "font-family", "'Fira Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'"],
         [withAttribute, "text-anchor", "middle"],
+        [withAttribute, "fill", color],
         [withAttribute, "dominant-baseline", "middle"],
         [withAttribute, "transform", `rotate(${angleDeg},${x},${y})`],
         [withText, c]
@@ -453,10 +475,10 @@ function renderState() {
   let d = new DrawingContext(drawing, cfg);
   let thickness = d.textHeight*maxOutLen;
   d.renderDisk(d.cx0, d.cy0, thickness);
-  d.renderSymbols(d.cx0, d.cy0, d.innerRadius, cfg["inputSpec"]);
+  d.renderSymbols(d.cx0, d.cy0, d.innerRadius, cfg["inputSpec"], false);
   d.renderDisk(d.cx1, d.cy1, thickness);
   for (var j = 0; j < maxOutLen; j++) {
-    d.renderSymbols(d.cx1, d.cy1, d.innerRadius - j*d.textHeight, splitOutput[j]);
+    d.renderSymbols(d.cx1, d.cy1, d.innerRadius - j*d.textHeight, splitOutput[j], true);
   }
 }
 
@@ -490,14 +512,25 @@ function identity(x) {
   return x;
 }
 
-function generateOutputsForRow(stateCount, outputRow) {
+function* sampledSeq(s) {
+  let n = s.length;
+  if (n == 0) {
+    return;
+  }
+  while (true) {
+    shuffleArray(s).forEach(function(c) {
+      yield c;
+    });
+  }
+}
+
+function randomBalancedSample(stateCount, rate, rc, outputSymbols) {
+  let rcFun = rc? randomCase : identity;
   let dst = new Array(stateCount);
-  let outputSymbols = outputRow["outputSymbols"];
-  let rc = outputRow["randomCase"]? randomCase : identity;
   if (outputSymbols.length <= 0) {
     return dst;
   }
-  let n = Math.round(outputRow["rate"]*stateCount);
+  let n = Math.round(rate*stateCount);
   if (n <= 0) {
     return dst;
   }
@@ -508,9 +541,16 @@ function generateOutputsForRow(stateCount, outputRow) {
   }
   tmp = tmp.concat(shuffleArray(outputSymbols)).slice(0, n);
   for (var i = 0; i < n; i++) {
-    dst[i] = rc(tmp[i]);
+    dst[i] = rcFun(tmp[i]);
   }
   return shuffleArray(dst);
+}
+
+function generateOutputsForRow(stateCount, outputRow) {
+  let outputSymbols = outputRow["outputSymbols"];
+  return randomBalancedSample(
+    stateCount, outputRow["rate"],
+    outputRow["randomCase"], outputSymbols);
 }
 
 function generate() {
@@ -631,5 +671,9 @@ downloadBtn.type = "button";
 downloadBtn.style.marginLeft = "0.5em";
 downloadBtn.addEventListener("click", downloadSVG);
 renderBtn.parentNode.insertBefore(downloadBtn, printBtn.nextSibling);
+
+document.getElementById("inputsymbols").addEventListener("input", function() {
+  refreshTotalError();
+});
 
 refreshUI();

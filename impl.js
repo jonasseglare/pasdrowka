@@ -1,5 +1,13 @@
 const defaultOutputSymbols = 'abcdefghijklmnpqrstuvwxyz123456789,.-/!';
 
+let generateButton = document.getElementById('genbutton');
+let renderButton = document.getElementById('renderState');
+let inputSpecEl = document.getElementById('inputspec');
+let outputSpecEl = document.getElementById('outputspec');
+let inputEl = document.getElementById('inputsymbols');
+let outputEl = document.getElementById('outputsymbols');
+let specErrorEl = document.getElementById('specError');
+
 function shuffleArray(array) {
   // Make a shallow copy to avoid mutating the original array
   const shuffled = array.slice();
@@ -193,11 +201,19 @@ function withAttribute(dst, k, v) {
 const inputErrorEl = document.getElementById('inputerror');
 const outputErrorEl = document.getElementById('outputerror');
 
+function identity(x) {
+  return x;
+}
+
 function refreshUI() {
   let cfg = getConfig();
-  console.log(cfg);
   inputErrorEl.textContent = cfg['inputError'] || '';
   outputErrorEl.textContent = cfg['outputError'] || '';
+  generateButton.disabled = cfg['ioError'];
+  renderButton.disabled = cfg['specError'];
+  specErrorEl.textContent = [cfg['inputSpecError'], cfg['outputSpecError']]
+    .filter(identity)
+    .join(', ');
 }
 
 let fsOutputRe = /fs_output(\d+)$/;
@@ -227,19 +243,25 @@ function parseOutputSpec(s) {
 }
 
 function getConfig() {
-  let inputValue = document.getElementById('inputsymbols').value;
-  let outputValue = document.getElementById('outputsymbols').value;
+  let inputValue = inputEl.value;
+  let outputValue = outputEl.value;
 
   let inputError = checkIOError(inputValue);
   let outputError = checkIOError(outputValue);
 
-  let inputSpec = document.getElementById('inputspec').value;
-  let outputSpec = parseOutputSpec(document.getElementById('outputspec').value);
+  let inputSpec = inputSpecEl.value;
+  let outputSpec = parseOutputSpec(outputSpecEl.value);
 
   let inputSpecError = checkIOError(inputSpec);
   let stateCount = 1 + inputValue.length;
   let outputSpecError =
-    outputSpec.length == stateCount ? null : 'Inconsistent output spec length';
+    outputSpec.length == stateCount
+      ? null
+      : 'Inconsistent output spec length: ' +
+        outputSpec.length +
+        ' vs ' +
+        stateCount +
+        ')';
 
   return {
     strlen: strlenNode.value,
@@ -447,6 +469,7 @@ function generate() {
   outputSpec.value = outputValue;
 
   renderState();
+  refreshUI();
 }
 
 document.getElementById('renderState').addEventListener('click', renderState);
@@ -521,14 +544,23 @@ function downloadSVG() {
   URL.revokeObjectURL(url);
 }
 
-['inputsymbols', 'outputsymbols'].forEach(function (id) {
-  document.getElementById(id).addEventListener('input', function (e) {
-    console.log('CHNAGE');
+[inputEl, outputEl].forEach(function (el) {
+  el.addEventListener('input', function (e) {
+    refreshUI();
+  });
+});
+
+[inputSpecEl, outputSpecEl].forEach(function (el) {
+  el.addEventListener('input', function (e) {
+    renderState();
     refreshUI();
   });
 });
 
 let strlenNode = document.getElementById('strlen');
+
+inputSpecEl.addEventListener('input', refreshUI);
+outputSpecEl.addEventListener('input', refreshUI);
 
 // Create and insert the buttons after the renderState button
 const renderBtn = document.getElementById('renderState');

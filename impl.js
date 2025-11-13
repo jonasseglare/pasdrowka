@@ -130,16 +130,30 @@ function sampleSubsets(sampleSize, subsetSize0, fullSetSize) {
   return shuffleArray(dst);
 }
 
-function randomBalancedSample(stateCount, strlen, outputSymbols) {
+function randomBalancedSample(inputSymbolCount, strlen, outputSymbols) {
   let cats = outputCategories(outputSymbols);
-  let subsets = sampleSubsets(stateCount, strlen, cats.length);
-  let dst = new Array(stateCount);
-  for (var i = 0; i < stateCount; i++) {
+  let subsets = sampleSubsets(inputSymbolCount, strlen, cats.length);
+
+  function inds2str(subset) {
     let y = '';
-    subsets[i].forEach(function (j) {
+    subset.forEach(function (j) {
       y += randNth(cats[j]);
     });
-    dst[i] = y;
+    return y;
+  }
+
+  let seenStr = new Set();
+  let dst = new Array(inputSymbolCount);
+  for (var i = 0; i < inputSymbolCount; i++) {
+    var x = null;
+    for (var j = 0; j < 5; j++) {
+      x = inds2str(subsets[i]);
+      if (!seenStr.has(x)) {
+        break;
+      }
+    }
+    seenStr.add(x);
+    dst[i] = x;
   }
   return dst;
 }
@@ -253,19 +267,19 @@ function getConfig() {
   let outputSpec = parseOutputSpec(outputSpecEl.value);
 
   let inputSpecError = checkIOError(inputSpec);
-  let stateCount = 1 + inputValue.length;
+  let inputSymbolCount = 1 + inputValue.length;
   let outputSpecError =
-    outputSpec.length == stateCount
+    outputSpec.length == inputSymbolCount
       ? null
       : 'Inconsistent output spec length: ' +
         outputSpec.length +
         ' vs ' +
-        stateCount +
+        inputSymbolCount +
         ')';
 
   return {
     strlen: strlenNode.value,
-    stateCount: stateCount,
+    inputSymbolCount: inputSymbolCount,
     inputSymbols: inputValue,
     outputSymbols: outputValue,
     inputSpec: inputSpec,
@@ -314,8 +328,8 @@ class DrawingContext {
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
     this.cfg = cfg;
-    this.stateCount = cfg['stateCount'];
-    this.angleStep = (2.0 * Math.PI) / this.stateCount;
+    this.inputSymbolCount = cfg['inputSymbolCount'];
+    this.angleStep = (2.0 * Math.PI) / this.inputSymbolCount;
     let offset = this.margin + this.outerRadius;
     this.cx0 = offset;
     this.cy0 = this.cx0;
@@ -334,7 +348,7 @@ class DrawingContext {
     let innerCircle = createCircle(cx, cy, innerRadius);
     this.svg.appendChild(outerCircle);
     this.svg.appendChild(innerCircle);
-    for (var i = 0; i < this.stateCount; i++) {
+    for (var i = 0; i < this.inputSymbolCount; i++) {
       let angle = this.angleAtIndex(i);
       let cosx = Math.cos(angle);
       let sinx = Math.sin(angle);
@@ -356,7 +370,7 @@ class DrawingContext {
   }
 
   renderSymbols(cx, cy, baseRadius, symbols, withCharColor) {
-    for (var i = 0; i < this.stateCount; i++) {
+    for (var i = 0; i < this.inputSymbolCount; i++) {
       let c = symbols[i];
       if (!c) {
         continue;
@@ -396,12 +410,6 @@ class DrawingContext {
     }
   }
 }
-
-/*function setSVGPhysicalSize(svg, widthMM, heightMM) {
-  svg.setAttribute("width", widthMM + "mm");
-  svg.setAttribute("height", heightMM + "mm");
-  svg.setAttribute("viewBox", `0 0 ${widthMM} ${heightMM}`);
-}*/
 
 function maxStringLength(arr) {
   return arr.reduce((max, s) => Math.max(max, s.length), 0);
@@ -453,7 +461,7 @@ function renderState() {
 
 function generate() {
   let cfg = getConfig();
-  let stateCount = cfg['stateCount'];
+  let inputSymbolCount = cfg['inputSymbolCount'];
   let inputSpec = document.getElementById('inputspec');
   inputSpec.value = shuffleArray(parseSymbols(cfg['inputSymbols'])).join('');
 
@@ -461,11 +469,11 @@ function generate() {
   let strlen = cfg['strlen'];
 
   let outputValue = randomBalancedSample(
-    stateCount,
+    inputSymbolCount,
     strlen,
     cfg['outputSymbols']
   ).join(' ');
-  console.log(stateCount, cfg['outputSymbols'], outputValue);
+  console.log(inputSymbolCount, cfg['outputSymbols'], outputValue);
   outputSpec.value = outputValue;
 
   renderState();

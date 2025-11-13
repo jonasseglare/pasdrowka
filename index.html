@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en-US">
   <head>
@@ -28,18 +29,19 @@
         <input type="number" id="strlen" min="1" max="3" value="2"></input>
       </fieldset>
     </div>
-    <div>
-      <button onclick="generate()" id="genbutton">Generate</button>
-    </div>
     <h2>Spec</h2>
     <div id="fs_spec">
       <label for="inputspec">Input spec</label>
       <input id="inputspec"></input>
       <label for="outputspec">Output spec</label>
       <input id="outputspec"></input>
-      <button id="renderState">Render</button>
       <p class="error" id="specError"></p>
     </div>
+    <div>
+      <button onclick="generate()" id="genbutton">Generate</button>
+      <button id="printBtn">Print</button>
+      <button id="downloadBtn">Download</button>
+    </div>    
     <h2>Result</h2>
     <svg width="210mm" height="297mm" viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg" id="drawing">
       <rect x="0" y="0" width="210" height="297" fill="white"/>

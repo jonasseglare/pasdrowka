@@ -1,7 +1,6 @@
 const defaultOutputSymbols = 'abcdefghijklmnpqrstuvwxyz123456789,.-/!';
 
 let generateButton = document.getElementById('genbutton');
-let renderButton = document.getElementById('renderState');
 let inputSpecEl = document.getElementById('inputspec');
 let outputSpecEl = document.getElementById('outputspec');
 let inputEl = document.getElementById('inputsymbols');
@@ -173,10 +172,6 @@ function test() {
 
 test();
 
-console.log(
-  randomBalancedSample(30, 2, 'abcdefghijklmnopqrstuvwxyzACDEFG01234.,')
-);
-
 function randInt(n) {
   return Math.floor(Math.random() * n);
 }
@@ -224,7 +219,6 @@ function refreshUI() {
   inputErrorEl.textContent = cfg['inputError'] || '';
   outputErrorEl.textContent = cfg['outputError'] || '';
   generateButton.disabled = cfg['ioError'];
-  renderButton.disabled = cfg['specError'];
   specErrorEl.textContent = [cfg['inputSpecError'], cfg['outputSpecError']]
     .filter(identity)
     .join(', ');
@@ -242,11 +236,11 @@ function splitStringBySpaces(src) {
   return src.split(/\s+/);
 }
 
-function checkIOError(s) {
+function checkIOError(s, label) {
   if (/\s/.test(s)) {
     return 'No whitespace allowed';
   } else if (s.length == 0) {
-    return 'Empty string';
+    return 'Empty string for ' + label;
   } else {
     return null;
   }
@@ -260,24 +254,27 @@ function getConfig() {
   let inputValue = inputEl.value;
   let outputValue = outputEl.value;
 
-  let inputError = checkIOError(inputValue);
-  let outputError = checkIOError(outputValue);
+  let inputError = checkIOError(inputValue, 'input symbols');
+  let outputError = checkIOError(outputValue, 'output symbols');
 
   let inputSpec = inputSpecEl.value;
   let outputSpec = parseOutputSpec(outputSpecEl.value);
 
-  let inputSpecError = checkIOError(inputSpec);
+  let inputSpecError = checkIOError(inputSpec, 'input spec');
   let inputSymbolCount = 1 + inputValue.length;
+
+  let expectedOutputSpecLen = inputSpec.length + 1;
   let outputSpecError =
-    outputSpec.length == inputSymbolCount
+    expectedOutputSpecLen == outputSpec.length
       ? null
-      : 'Inconsistent output spec length: ' +
+      : 'Output spec has length ' +
         outputSpec.length +
-        ' vs ' +
-        inputSymbolCount +
-        ')';
+        ' but should be ' +
+        expectedOutputSpecLen;
+  let stateCount = Math.max(12, inputSpec.length + 1);
 
   return {
+    stateCount: stateCount,
     strlen: strlenNode.value,
     inputSymbolCount: inputSymbolCount,
     inputSymbols: inputValue,
@@ -328,8 +325,9 @@ class DrawingContext {
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
     this.cfg = cfg;
-    this.inputSymbolCount = cfg['inputSymbolCount'];
-    this.angleStep = (2.0 * Math.PI) / this.inputSymbolCount;
+    this.stateCount = cfg['stateCount'];
+    console.log('stateCount' + this.stateCount);
+    this.angleStep = (2.0 * Math.PI) / this.stateCount;
     let offset = this.margin + this.outerRadius;
     this.cx0 = offset;
     this.cy0 = this.cx0;
@@ -348,7 +346,7 @@ class DrawingContext {
     let innerCircle = createCircle(cx, cy, innerRadius);
     this.svg.appendChild(outerCircle);
     this.svg.appendChild(innerCircle);
-    for (var i = 0; i < this.inputSymbolCount; i++) {
+    for (var i = 0; i < this.stateCount; i++) {
       let angle = this.angleAtIndex(i);
       let cosx = Math.cos(angle);
       let sinx = Math.sin(angle);
@@ -370,7 +368,7 @@ class DrawingContext {
   }
 
   renderSymbols(cx, cy, baseRadius, symbols, withCharColor) {
-    for (var i = 0; i < this.inputSymbolCount; i++) {
+    for (var i = 0; i < this.stateCount; i++) {
       let c = symbols[i];
       if (!c) {
         continue;
@@ -473,14 +471,11 @@ function generate() {
     strlen,
     cfg['outputSymbols']
   ).join(' ');
-  console.log(inputSymbolCount, cfg['outputSymbols'], outputValue);
   outputSpec.value = outputValue;
 
   renderState();
   refreshUI();
 }
-
-document.getElementById('renderState').addEventListener('click', renderState);
 
 // Add Print SVG button
 function printSVG() {
@@ -571,19 +566,17 @@ inputSpecEl.addEventListener('input', refreshUI);
 outputSpecEl.addEventListener('input', refreshUI);
 
 // Create and insert the buttons after the renderState button
-const renderBtn = document.getElementById('renderState');
-const printBtn = document.createElement('button');
+const printBtn = document.getElementById('printBtn');
 printBtn.textContent = 'Print SVG';
 printBtn.type = 'button';
 printBtn.style.marginLeft = '0.5em';
 printBtn.addEventListener('click', printSVG);
-renderBtn.parentNode.insertBefore(printBtn, renderBtn.nextSibling);
 
-const downloadBtn = document.createElement('button');
+const downloadBtn = document.getElementById('downloadBtn');
 downloadBtn.textContent = 'Download SVG';
 downloadBtn.type = 'button';
 downloadBtn.style.marginLeft = '0.5em';
 downloadBtn.addEventListener('click', downloadSVG);
-renderBtn.parentNode.insertBefore(downloadBtn, printBtn.nextSibling);
 
 refreshUI();
+renderState();

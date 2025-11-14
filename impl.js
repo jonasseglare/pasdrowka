@@ -513,6 +513,34 @@ class DrawingContext {
       this.svg.appendChild(textNode);
     }
   }
+
+  renderCfg(cfg) {
+    let outputSpec = cfg['outputSpec'];
+    let splitOutput = splitOutputSpec(outputSpec);
+    let maxOutLen = maxStringLength(outputSpec);
+    let thickness = this.textHeight * maxOutLen;
+    this.renderDisk(this.cx0, this.cy0, thickness);
+    this.renderColoredSectors(this.cx0, this.cy0);
+    this.renderSymbols(
+      this.cx0,
+      this.cy0,
+      this.innerRadius,
+      cfg['inputSpec'],
+      false
+    );
+    this.renderDisk(this.cx1, this.cy1, thickness);
+    for (var j = 0; j < maxOutLen; j++) {
+      this.renderSymbols(
+        this.cx1,
+        this.cy1,
+        this.innerRadius - j * this.textHeight,
+        splitOutput[j],
+        true
+      );
+    }
+    this.renderLine(0, 'Input:  ' + cfg['inputSpec']);
+    this.renderLine(1, 'Output: ' + cfg['outputSpec'].join(' '));
+  }
 }
 
 function maxStringLength(arr) {
@@ -537,33 +565,10 @@ function splitOutputSpec(outputSpec) {
 
 function renderState() {
   let cfg = getConfig();
-
-  let outputSpec = cfg['outputSpec'];
-  let splitOutput = splitOutputSpec(outputSpec);
-  let maxOutLen = maxStringLength(outputSpec);
-
   let svg = document.getElementById('drawing');
-  // Set SVG to 100x100mm, so radius 40 is 40mm on paper
-  //setSVGPhysicalSize(svg, 100, 100);
   drawing.replaceChildren();
-
   let d = new DrawingContext(drawing, cfg['stateCount']);
-  let thickness = d.textHeight * maxOutLen;
-  d.renderDisk(d.cx0, d.cy0, thickness);
-  d.renderColoredSectors(d.cx0, d.cy0);
-  d.renderSymbols(d.cx0, d.cy0, d.innerRadius, cfg['inputSpec'], false);
-  d.renderDisk(d.cx1, d.cy1, thickness);
-  for (var j = 0; j < maxOutLen; j++) {
-    d.renderSymbols(
-      d.cx1,
-      d.cy1,
-      d.innerRadius - j * d.textHeight,
-      splitOutput[j],
-      true
-    );
-  }
-  d.renderLine(0, 'Input:  ' + cfg['inputSpec']);
-  d.renderLine(1, 'Output: ' + cfg['outputSpec'].join(' '));
+  d.renderCfg(cfg);
 }
 
 function generate() {

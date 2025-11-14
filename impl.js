@@ -7,6 +7,17 @@ let inputEl = document.getElementById('inputsymbols');
 let outputEl = document.getElementById('outputsymbols');
 let specErrorEl = document.getElementById('specError');
 
+let colors = [
+  'red',
+  'green',
+  'blue',
+  'cyan',
+  'yellow',
+  'magenta',
+  'gray',
+  'black',
+];
+
 function shuffleArray(array) {
   // Make a shallow copy to avoid mutating the original array
   const shuffled = array.slice();
@@ -168,6 +179,18 @@ function test() {
       });
     });
   }
+  {
+    for (var i = 0; i < 40; i++) {
+      let cs = colorSequence(i);
+      console.assert(cs.length == i);
+      if (2 <= i) {
+        for (var j = 0; j < i; j++) {
+          let next = (j + 1) % i;
+          console.assert(cs[j] != cs[next]);
+        }
+      }
+    }
+  }
 }
 
 test();
@@ -178,6 +201,35 @@ function randInt(n) {
 
 function randNth(arr) {
   return arr[randInt(arr.length)];
+}
+
+function div0(a, b) {
+  return Math.floor(a / b);
+}
+
+function div1(a, b) {
+  return Math.floor((a - 1.0) / b) + 1;
+}
+
+function colorSequence(stateCount) {
+  let dst = new Array(stateCount);
+  if (stateCount == 0) {
+    return dst;
+  }
+  let len = colors.length;
+  let cycleCount = div1(stateCount, len);
+  let baseCount = div0(stateCount, cycleCount);
+  let extra = stateCount - baseCount * cycleCount;
+
+  var at = 0;
+  for (var i = 0; i < cycleCount; i++) {
+    let limit = baseCount + (i < extra ? 1 : 0);
+    for (var j = 0; j < limit; j++) {
+      dst[at++] = colors[j];
+    }
+  }
+  console.assert(at === stateCount);
+  return dst;
 }
 
 function threadFirst() {
@@ -326,7 +378,6 @@ class DrawingContext {
     this.svg = svg;
     this.cfg = cfg;
     this.stateCount = cfg['stateCount'];
-    console.log('stateCount' + this.stateCount);
     this.angleStep = (2.0 * Math.PI) / this.stateCount;
     let offset = this.margin + this.outerRadius;
     this.cx0 = offset;
@@ -334,10 +385,42 @@ class DrawingContext {
     this.cx1 = this.cx0;
     this.cy1 = this.cy0 + 2.0 * this.outerRadius + this.margin;
     this.dotRadius = 1.0 * scale;
+    this.coloredSectorRadius = 31 * scale;
+    this.sectorColors = colorSequence(this.stateCount);
+    this.sectorThickness = 2 * scale;
   }
 
   angleAtIndex(i) {
     return i * this.angleStep - Math.PI / 2;
+  }
+
+  fromPolar(cx, cy, angle, radius) {
+    return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)];
+  }
+
+  renderColoredSector(cx, cy, index) {
+    let alpha = this.angleAtIndex(index);
+    let beta = this.angleAtIndex(index + 1);
+    let r = this.coloredSectorRadius;
+    let x0, y0, x1, y1;
+    [x0, y0] = this.fromPolar(cx, cy, alpha, r);
+    [x1, y1] = this.fromPolar(cx, cy, beta, r);
+
+    let dst = document.createElementNS(svgNS, 'path');
+    dst.setAttribute(
+      'd',
+      'M ' + x0 + ',' + y0 + ' A ' + r + ',' + r + ' 0 0,1 ' + x1 + ',' + y1
+    );
+    dst.setAttribute('fill', 'none');
+    dst.setAttribute('stroke', this.sectorColors[index]);
+    dst.setAttribute('stroke-with', this.sectorThickness);
+    this.svg.appendChild(dst);
+  }
+
+  renderColoredSectors(cx, cy) {
+    for (var i = 0; i < this.stateCount; i++) {
+      this.renderColoredSector(cx, cy, i);
+    }
   }
 
   renderDisk(cx, cy, thickness) {
@@ -444,6 +527,7 @@ function renderState() {
   let d = new DrawingContext(drawing, cfg);
   let thickness = d.textHeight * maxOutLen;
   d.renderDisk(d.cx0, d.cy0, thickness);
+  d.renderColoredSectors(d.cx0, d.cy0);
   d.renderSymbols(d.cx0, d.cy0, d.innerRadius, cfg['inputSpec'], false);
   d.renderDisk(d.cx1, d.cy1, thickness);
   for (var j = 0; j < maxOutLen; j++) {

@@ -367,17 +367,17 @@ function createLine(x0, y0, x1, y1) {
 }
 
 class DrawingContext {
-  constructor(svg, cfg) {
+  constructor(svg, stateCount) {
     let scale = 1.0;
     this.svg = svg;
     this.margin = 7.5 * scale;
     this.outerRadius = 30 * scale;
     this.textHeight = 5.25 * scale;
+    this.lineHeight = 7 * scale;
     this.fontSize = 4.0 * scale;
     this.innerRadius = this.outerRadius - this.textHeight;
     this.svg = svg;
-    this.cfg = cfg;
-    this.stateCount = cfg['stateCount'];
+    this.stateCount = stateCount;
     this.angleStep = (2.0 * Math.PI) / this.stateCount;
     let offset = this.margin + this.outerRadius;
     this.cx0 = offset;
@@ -388,6 +388,7 @@ class DrawingContext {
     this.coloredSectorRadius = 31 * scale;
     this.sectorColors = colorSequence(this.stateCount);
     this.sectorThickness = 2 * scale;
+    this.width = 2 * (this.margin + this.outerRadius);
   }
 
   angleAtIndex(i) {
@@ -450,6 +451,34 @@ class DrawingContext {
     );
   }
 
+  createText() {
+    return threadFirst(
+      document.createElementNS(svgNS, 'text'),
+      [withAttribute, 'font-size', this.fontSize],
+      [
+        withAttribute,
+        'font-family',
+        "'Fira Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'",
+      ]
+    );
+  }
+
+  renderLine(lineIndex, text) {
+    let x = this.margin;
+    let y =
+      lineIndex * this.lineHeight + 3 * this.margin + 4 * this.outerRadius;
+    this.svg.appendChild(
+      threadFirst(
+        this.createText(),
+        [withAttribute, 'x', x],
+        [withAttribute, 'y', y],
+        [withAttribute, 'text-anchor', 'left'],
+        [withAttribute, 'dominant-baseline', 'auto'],
+        [withText, text]
+      )
+    );
+  }
+
   renderSymbols(cx, cy, baseRadius, symbols, withCharColor) {
     for (var i = 0; i < this.stateCount; i++) {
       let c = symbols[i];
@@ -472,15 +501,9 @@ class DrawingContext {
       let x = cx + r * cosx;
       let y = cy + r * sinx;
       let textNode = threadFirst(
-        document.createElementNS(svgNS, 'text'),
+        this.createText(),
         [withAttribute, 'x', x],
         [withAttribute, 'y', y],
-        [withAttribute, 'font-size', this.fontSize],
-        [
-          withAttribute,
-          'font-family',
-          "'Fira Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'",
-        ],
         [withAttribute, 'text-anchor', 'middle'],
         [withAttribute, 'fill', color],
         [withAttribute, 'dominant-baseline', 'middle'],
@@ -524,7 +547,7 @@ function renderState() {
   //setSVGPhysicalSize(svg, 100, 100);
   drawing.replaceChildren();
 
-  let d = new DrawingContext(drawing, cfg);
+  let d = new DrawingContext(drawing, cfg['stateCount']);
   let thickness = d.textHeight * maxOutLen;
   d.renderDisk(d.cx0, d.cy0, thickness);
   d.renderColoredSectors(d.cx0, d.cy0);
@@ -539,6 +562,8 @@ function renderState() {
       true
     );
   }
+  d.renderLine(0, 'Input:  ' + cfg['inputSpec']);
+  d.renderLine(1, 'Output: ' + cfg['outputSpec'].join(' '));
 }
 
 function generate() {

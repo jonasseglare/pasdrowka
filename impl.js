@@ -6,6 +6,7 @@ let outputSpecEl = document.getElementById('outputspec');
 let inputEl = document.getElementById('inputsymbols');
 let outputEl = document.getElementById('outputsymbols');
 let specErrorEl = document.getElementById('specError');
+let svgNode = document.getElementById('drawing');
 
 let colors = [
   'red',
@@ -389,6 +390,8 @@ class DrawingContext {
     this.sectorColors = colorSequence(this.stateCount);
     this.sectorThickness = 2 * scale;
     this.width = 2 * (this.margin + this.outerRadius);
+    this.textY = 3 * this.margin + 4 * this.outerRadius;
+    this.height = this.textY + 2 * this.lineHeight + this.margin;
   }
 
   angleAtIndex(i) {
@@ -465,8 +468,7 @@ class DrawingContext {
 
   renderLine(lineIndex, text) {
     let x = this.margin;
-    let y =
-      lineIndex * this.lineHeight + 3 * this.margin + 4 * this.outerRadius;
+    let y = lineIndex * this.lineHeight + this.textY;
     this.svg.appendChild(
       threadFirst(
         this.createText(),
@@ -539,7 +541,24 @@ class DrawingContext {
       );
     }
     this.renderLine(0, 'Input:  ' + cfg['inputSpec']);
-    this.renderLine(1, 'Output: ' + cfg['outputSpec'].join(' '));
+    this.renderLine(1, 'Output:');
+    var lineCounter = 2;
+    let maxLine = 30;
+    var s = '';
+    var self = this;
+    function emitLine() {
+      if (0 < s.length) {
+        self.renderLine(lineCounter++, s);
+        s = '';
+      }
+    }
+    for (var i = 0; i < outputSpec.length; i++) {
+      s += outputSpec[i] + ' ';
+      if (maxLine <= s.length) {
+        emitLine();
+      }
+    }
+    emitLine();
   }
 }
 
@@ -565,9 +584,8 @@ function splitOutputSpec(outputSpec) {
 
 function renderState() {
   let cfg = getConfig();
-  let svg = document.getElementById('drawing');
-  drawing.replaceChildren();
-  let d = new DrawingContext(drawing, cfg['stateCount']);
+  svgNode.replaceChildren();
+  let d = new DrawingContext(svgNode, cfg['stateCount']);
   d.renderCfg(cfg);
 }
 

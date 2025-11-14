@@ -1,4 +1,7 @@
-const defaultOutputSymbols = 'abcdefghijklmnpqrstuvwxyz123456789,.-/!';
+const defaultInputSymbols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ-.';
+const defaultOutputSymbols =
+  'abcdefghijklmnpqrstuvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ123456789.,';
+const defaultStringLength = 2;
 
 let generateButton = document.getElementById('genbutton');
 let inputSpecEl = document.getElementById('inputspec');
@@ -7,6 +10,10 @@ let inputEl = document.getElementById('inputsymbols');
 let outputEl = document.getElementById('outputsymbols');
 let specErrorEl = document.getElementById('specError');
 let svgNode = document.getElementById('drawing');
+let resetButton = document.getElementById('reset');
+
+const paperWidthMM = '210';
+const paperHeightMM = '297';
 
 let colors = [
   'red',
@@ -18,6 +25,16 @@ let colors = [
   'gray',
   'black',
 ];
+
+function reset() {
+  inputEl.value = defaultInputSymbols;
+  outputEl.value = defaultOutputSymbols;
+  strlenNode.value = defaultStringLength;
+  inputSpecEl.value = '';
+  outputSpecEl.value = '';
+  refreshUI();
+  renderState();
+}
 
 function shuffleArray(array) {
   // Make a shallow copy to avoid mutating the original array
@@ -520,7 +537,7 @@ class DrawingContext {
     let outputSpec = cfg['outputSpec'];
     let splitOutput = splitOutputSpec(outputSpec);
     let maxOutLen = maxStringLength(outputSpec);
-    let thickness = this.textHeight * maxOutLen;
+    let thickness = this.textHeight * Math.max(1, maxOutLen);
     this.renderDisk(this.cx0, this.cy0, thickness);
     this.renderColoredSectors(this.cx0, this.cy0);
     this.renderSymbols(
@@ -709,6 +726,8 @@ downloadBtn.textContent = 'Download SVG';
 downloadBtn.type = 'button';
 downloadBtn.style.marginLeft = '0.5em';
 downloadBtn.addEventListener('click', downloadSVG);
+
+resetButton.addEventListener('click', reset);
 
 refreshUI();
 renderState();

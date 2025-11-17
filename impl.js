@@ -408,7 +408,11 @@ class DrawingContext {
     this.sectorThickness = 2 * scale;
     this.width = 2 * (this.margin + this.outerRadius);
     this.textY = 3 * this.margin + 4 * this.outerRadius;
-    this.height = this.textY + 2 * this.lineHeight + this.margin;
+    this.baseHeight = this.textY + this.margin;
+  }
+
+  computeHeight(lineCount) {
+    return this.baseHeight + lineCount * this.lineHeight;
   }
 
   angleAtIndex(i) {
@@ -576,6 +580,7 @@ class DrawingContext {
       }
     }
     emitLine();
+    return { width: this.width, height: this.computeHeight(lineCounter) };
   }
 }
 
@@ -603,7 +608,8 @@ function renderState() {
   let cfg = getConfig();
   svgNode.replaceChildren();
   let d = new DrawingContext(svgNode, cfg['stateCount']);
-  d.renderCfg(cfg);
+  let size = d.renderCfg(cfg);
+  setSvgWidthHeight(svgNode, size['width'], size['height']);
 }
 
 function generate() {

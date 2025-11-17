@@ -587,10 +587,10 @@ function splitOutputSpec(outputSpec) {
   let maxOutLen = maxStringLength(outputSpec);
   let dst = new Array(maxOutLen);
   let n = outputSpec.length;
-  for (var i = 0; i < maxOutLen; i++) {
+  for (let i = 0; i < maxOutLen; i++) {
     dst[i] = new Array(n);
   }
-  for (var i = 0; i < n; i++) {
+  for (let i = 0; i < n; i++) {
     var s = outputSpec[i];
     for (var j = 0; j < s.length; j++) {
       dst[j][i] = s[j];
@@ -626,13 +626,51 @@ function generate() {
   refreshUI();
 }
 
+function setAttributes(dst, attribMap) {
+  for (let k in attribMap) {
+    dst.setAttribute(k, attribMap[k]);
+  }
+}
+
+function setSvgWidthHeight(dst, widthMM, heightMM) {
+  setAttributes(dst, {
+    width: widthMM + 'mm',
+    height: heightMM + 'mm',
+    viewBox: '0 0 ' + widthMM + ' ' + heightMM,
+  });
+}
+
+function withFullSvg(f) {
+  let svg = document.getElementById('drawing');
+  if (!svg) {
+    f(svg);
+    return;
+  }
+
+  let newAttrs = {
+    width: paperWidthMM + 'mm',
+    height: paperHeightMM + 'mm',
+    viewBox: '0 0 ' + paperWidthMM + ' ' + paperHeightMM,
+  };
+  let oldAttrs = {};
+
+  for (let k in newAttrs) {
+    oldAttrs[k] = svg.getAttribute(k);
+    svg.setAttribute(k, newAttrs[k]);
+  }
+
+  f(svg);
+
+  for (let k in oldAttrs) {
+    svg.setAttribute(k, oldAttrs[k]);
+  }
+}
+
 // Add Print SVG button
 function printSVG() {
-  const svg = document.getElementById('drawing');
-  if (!svg) return;
-  const svgData = new XMLSerializer().serializeToString(svg);
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html>
+  withFullSvg(function (svg) {
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html>
 <html>
 <head>
   <title>Print SVG</title>
@@ -677,23 +715,25 @@ function printSVG() {
 </head>
 <body>${svg.outerHTML}<script>window.onload=function(){window.print();}</script></body>
 </html>`);
-  win.document.close();
+    win.document.close();
+  });
 }
 
 // Download SVG function
 function downloadSVG() {
-  const svg = document.getElementById('drawing');
-  if (!svg) return;
-  const svgData = new XMLSerializer().serializeToString(svg);
-  const blob = new Blob([svgData], { type: 'image/svg+xml' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'pasdrowka.svg';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  withFullSvg(function (svg) {
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pasdrowka.svg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
 }
 
 [inputEl, outputEl].forEach(function (el) {

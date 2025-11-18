@@ -27,9 +27,9 @@ body {
 }
 
 #mainconfig {
-    width: 40em;
+    max-width: 40em;
 }
 
 #mainoutput {
-    width: 20em;
+    max-width: 20em;
 }

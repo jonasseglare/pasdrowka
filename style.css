@@ -47,10 +47,13 @@ body {
 
 #mainconfig input {
     grid-column: 2;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 #mainconfig p.error {
     grid-column: 2;
+    width: 100%;
 }
 
 #mainoutput {

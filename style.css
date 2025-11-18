@@ -28,6 +28,29 @@ body {
 
 #mainconfig {
     max-width: 40em;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1em;
+}
+
+#mainconfig h2 {
+    grid-column: 1 / -1;
+}
+
+#mainconfig legend {
+    grid-column: 1;
+}
+
+#mainconfig #buttonpanel {
+    grid-column: 1 / -1;
+}
+
+#mainconfig input {
+    grid-column: 2;
+}
+
+#mainconfig p.error {
+    grid-column: 2;
 }
 
 #mainoutput {

@@ -609,7 +609,11 @@ function renderState() {
   svgNode.replaceChildren();
   let d = new DrawingContext(svgNode, cfg['stateCount']);
   let size = d.renderCfg(cfg);
-  setSvgWidthHeight(svgNode, size['width'], size['height']);
+  let width = size['width'];
+  let height = size['height'];
+  svgNode.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+  svgNode.setAttribute('width', '100%');
+  svgNode.removeAttribute('height');
 }
 
 function generate() {

@@ -10,3 +10,26 @@ label {
 svg {
     border: 1px solid green
 }
+
+body {
+    display: flex;
+    justify-content: center;
+}
+
+#main {
+    display: flex;
+    flex-direction: row;
+    margin: 0px;
+    padding: 2em 0em;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2em;
+}
+
+#mainconfig {
+    width: 40em;
+}
+
+#mainoutput {
+    width: 20em;
+}

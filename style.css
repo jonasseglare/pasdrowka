@@ -21,18 +21,19 @@ body {
     justify-content: center;
 }
 
-#main {
-    display: flex;
-    flex-direction: row;
-    margin: 0px;
-    padding: 2em 0em;
-    //justify-content: center;
-    gap: 2em;
-    align-items: flex-start;
+@media (min-width: 50em) {
+    #main {
+        display: flex;
+        flex-direction: row;
+        margin: 0px;
+        padding: 2em 0em;
+        //justify-content: center;
+        gap: 2em;
+        align-items: flex-start;
+    }
 }
 
 #mainconfig {
-    //flex: 0 1 60em;
     width: 100%;
     display: grid;
     grid-template-columns: auto 1fr;

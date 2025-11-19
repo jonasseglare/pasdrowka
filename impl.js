@@ -38,13 +38,32 @@ function reset() {
   renderState();
 }
 
+function randInt(max) {
+  if (max <= 0 || max > Number.MAX_SAFE_INTEGER)
+    throw new Error('max must be a positive safe integer');
+
+  const array = new Uint32Array(1);
+  const range = 0x100000000; // 2^32
+
+  // rejection sampling to avoid modulo bias
+  const limit = range - (range % max);
+
+  let random;
+  do {
+    crypto.getRandomValues(array);
+    random = array[0];
+  } while (random >= limit);
+
+  return random % max;
+}
+
 function shuffleArray(array) {
   // Make a shallow copy to avoid mutating the original array
   const shuffled = array.slice();
 
   for (let i = shuffled.length - 1; i > 0; i--) {
     // Generate a random index from 0 to i
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = randInt(i + 1);
     // Swap elements
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
@@ -190,6 +209,16 @@ function randomBalancedSample(inputSymbolCount, strlen, outputSymbols) {
 
 function test() {
   {
+    let dst = new Set();
+    for (let i = 0; i < 300; i++) {
+      dst.add(randInt(3));
+    }
+    console.assert(3 == dst.size);
+    console.assert(dst.has(0));
+    console.assert(dst.has(1));
+    console.assert(dst.has(2));
+  }
+  {
     let result = sampleSubsets(30, 4, 2);
     console.assert(result.length == 30);
     result.forEach(function (inds) {
@@ -211,13 +240,10 @@ function test() {
       }
     }
   }
+  console.log('All tests passed.');
 }
 
 test();
-
-function randInt(n) {
-  return Math.floor(Math.random() * n);
-}
 
 function randNth(arr) {
   return arr[randInt(arr.length)];
@@ -346,7 +372,6 @@ function getConfig() {
         expectedOutputSpecLen;
   let stateCount = Math.max(12, inputSpec.length + 1);
 
-  console.log('STRLEN', strlenEl.value);
   let strlenError =
     strlenEl.value === ''
       ? 'Invalid value'

@@ -1,5 +1,8 @@
 .error {
     color: red;
+    display: block;
+    height: 1em;
+    margin: 0 0 0.5em;
 }
 .invisible {
   visibility: hidden;
@@ -12,7 +15,6 @@ svg {
 }
 
 #content {
-    //width: 100em;
     flex: 0 1 80em;
 }
 
@@ -38,7 +40,8 @@ body {
     display: grid;
     grid-template-columns: auto 1fr;
     grid-template-rows: auto;
-    gap: 1em;
+    grid-column-gap: 1em;
+    grid-row-gap: 0.5em;
     align-items: baseline;
 }
 

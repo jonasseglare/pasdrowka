@@ -11,6 +11,8 @@ let outputEl = document.getElementById('outputsymbols');
 let specErrorEl = document.getElementById('specError');
 let svgNode = document.getElementById('drawing');
 let resetButton = document.getElementById('reset');
+let strlenEl = document.getElementById('strlen');
+let strlenErrorEl = document.getElementById('strlenerror');
 
 const paperWidthMM = '210';
 const paperHeightMM = '297';
@@ -29,7 +31,7 @@ let colors = [
 function reset() {
   inputEl.value = defaultInputSymbols;
   outputEl.value = defaultOutputSymbols;
-  strlenNode.value = defaultStringLength;
+  strlenEl.value = defaultStringLength;
   inputSpecEl.value = '';
   outputSpecEl.value = '';
   refreshUI();
@@ -288,7 +290,8 @@ function refreshUI() {
   let cfg = getConfig();
   inputErrorEl.textContent = cfg['inputError'] || '';
   outputErrorEl.textContent = cfg['outputError'] || '';
-  generateButton.disabled = cfg['ioError'];
+  generateButton.disabled = cfg['ioError'] || cfg['strlenError'];
+  strlenErrorEl.textContent = cfg['strlenError'] || '';
   specErrorEl.textContent = [cfg['inputSpecError'], cfg['outputSpecError']]
     .filter(identity)
     .join(', ');
@@ -343,9 +346,18 @@ function getConfig() {
         expectedOutputSpecLen;
   let stateCount = Math.max(12, inputSpec.length + 1);
 
+  console.log('STRLEN', strlenEl.value);
+  let strlenError =
+    strlenEl.value === ''
+      ? 'Invalid value'
+      : strlenEl.value < 1
+        ? 'Value too low'
+        : null;
+
   return {
     stateCount: stateCount,
-    strlen: strlenNode.value,
+    strlen: strlenEl.value,
+    strlenError: strlenError,
     inputSymbolCount: inputSymbolCount,
     inputSymbols: inputValue,
     outputSymbols: outputValue,
@@ -746,7 +758,7 @@ function downloadSVG() {
   });
 }
 
-[inputEl, outputEl].forEach(function (el) {
+[inputEl, outputEl, strlenEl].forEach(function (el) {
   el.addEventListener('input', function (e) {
     refreshUI();
   });
@@ -758,11 +770,6 @@ function downloadSVG() {
     refreshUI();
   });
 });
-
-let strlenNode = document.getElementById('strlen');
-
-inputSpecEl.addEventListener('input', refreshUI);
-outputSpecEl.addEventListener('input', refreshUI);
 
 // Create and insert the buttons after the renderState button
 const printBtn = document.getElementById('printBtn');

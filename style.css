@@ -53,7 +53,7 @@ body {
     grid-column: 1 / -1;
 }
 
-#mainconfig input {
+#mainconfig input, textarea {
     grid-column: 2;
     width: 100%;
     box-sizing: border-box;
@@ -62,6 +62,11 @@ body {
 #mainconfig p.error {
     grid-column: 2;
     width: 100%;
+}
+
+#mainconfig #strlen {
+    width: max-content;
+    //box-sizing: content-box;
 }
 
 #mainoutput {

@@ -580,7 +580,7 @@ class DrawingContext {
     let maxOutLen = maxStringLength(outputSpec);
     let thickness = this.textHeight * Math.max(1, maxOutLen);
     this.renderDisk(this.cx0, this.cy0, thickness);
-    this.renderColoredSectors(this.cx0, this.cy0);
+    this.renderColoredSectors(this.cx1, this.cy1);
     this.renderSymbols(
       this.cx0,
       this.cy0,

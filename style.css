@@ -22,6 +22,28 @@ body {
     display: flex;
     justify-content: center;
     background-color: #c1bad1;
+    font-family: 'Open Sans', sans-serif;
+}
+
+textarea {
+    font-family: 'Fira Code';    
+}
+
+button {
+    background-color: #e1f5e7;
+    padding: 1em;
+    border: 1px solid gray;
+    border-radius: 0.5em;
+    margin: 0em 0.8em;
+}
+
+// From https://github.com/kognise/water.css/blob/master/dist/light.css
+button, input, textarea {
+  transition: background-color 0.1s linear, border-color 0.1s linear, color 0.1s linear, box-shadow 0.1s linear, transform 0.1s ease;
+}
+
+button:hover {
+    background-color: white;
 }
 
 @media (min-width: 50em) {
@@ -32,12 +54,14 @@ body {
         padding: 0em 0em;
         //justify-content: center;
         //gap: 1em;
-        align-items: flex-start;
+        align-items: stretch;
     }
 }
 
 #mainconfig {
     width: 100%;
+    box-sizing: border-box;
+    //flex: 0 1 50em;
     display: grid;
     grid-template-columns: auto 1fr;
     grid-template-rows: auto;
@@ -46,9 +70,14 @@ body {
     align-items: baseline;
 }
 
+#mainoutput {
+    flex: 0 1 30em;
+}
+
+
 .panel {
     background-color: white;
-    padding: 0.5em;
+    padding: 1.2em;
     border-radius: 0.3em;
     margin: 0.5em;
 }
@@ -81,6 +110,6 @@ body {
     //box-sizing: content-box;
 }
 
-#mainoutput {
-    flex: 0 1 30em;
+h1, h2, h3 {
+    font-family: 'Nunito';
 }

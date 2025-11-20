@@ -64,7 +64,8 @@ button:hover {
     grid-template-rows: auto;
     grid-column-gap: 1em;
     grid-row-gap: 0.5em;
-    align-items: baseline;
+    align-items: start;
+    align-content: start;
 }
 
 #mainoutput {

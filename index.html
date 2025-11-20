@@ -8,10 +8,12 @@
   </head>
   <body>
     <div id="content">
-      <h1>Pasdrówka - A cute password manager</h1>
-      <p>Pasdrowka is a paper-based password manager configured with a secret key. It converts text hints to a hashed string used as a password.</p>
+      <div id="info" class="panel">
+        <h1>Pasdrówka - A cute password manager</h1>
+        <p>Pasdrowka is a paper-based password manager configured with a secret key. It converts text hints to a hashed string used as a password.</p>
+      </div>
       <div id="main">
-        <div id="mainconfig">
+        <div id="mainconfig" class="panel">
           <h2>Configuration</h2>
           <label for="inputsymbols">Input symbols</label>
           <textarea rows="2" id="inputsymbols" value="ABCDEFGHIJKLMNOPQRSTUVWXYZ-."></textarea>
@@ -35,7 +37,7 @@
             <button id="reset">Reset</button>
           </div>    
         </div>
-        <div id="mainoutput">
+        <div id="mainoutput" class="panel">
           <h2>Result</h2>
           <svg width="210mm" height="297mm" viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg" id="drawing">
             <rect x="0" y="0" width="210" height="297" fill="white"/>

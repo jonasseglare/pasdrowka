@@ -21,6 +21,7 @@ svg {
 body {
     display: flex;
     justify-content: center;
+    background-color: #c1bad1;
 }
 
 @media (min-width: 50em) {
@@ -28,9 +29,9 @@ body {
         display: flex;
         flex-direction: row;
         margin: 0px;
-        padding: 2em 0em;
+        padding: 0em 0em;
         //justify-content: center;
-        gap: 2em;
+        //gap: 1em;
         align-items: flex-start;
     }
 }
@@ -43,6 +44,13 @@ body {
     grid-column-gap: 1em;
     grid-row-gap: 0.5em;
     align-items: baseline;
+}
+
+.panel {
+    background-color: white;
+    padding: 0.5em;
+    border-radius: 0.3em;
+    margin: 0.5em;
 }
 
 #mainconfig h2 {

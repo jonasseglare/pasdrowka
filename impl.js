@@ -811,5 +811,6 @@ downloadBtn.addEventListener('click', downloadSVG);
 
 resetButton.addEventListener('click', reset);
 
+reset();
 refreshUI();
 renderState();

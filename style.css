@@ -52,15 +52,13 @@ button:hover {
         flex-direction: row;
         margin: 0px;
         padding: 0em 0em;
-        //justify-content: center;
-        //gap: 1em;
         align-items: stretch;
     }
 }
 
 #mainconfig {
     box-sizing: border-box;
-    flex: 1 1 30em;
+    flex: 1 1 75%;
     display: grid;
     grid-template-columns: auto 1fr;
     grid-template-rows: auto;

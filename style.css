@@ -114,3 +114,7 @@ h1, h2, h3 {
 emph {
     font-style: italic;
 }
+
+.miniheader {
+    font-weight: bold;
+}

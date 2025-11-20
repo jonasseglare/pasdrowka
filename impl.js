@@ -85,20 +85,20 @@ function characterCategory(c) {
 
 function* sampledSeq(s) {
   let n = s.length;
-  if (n == 0) {
+  if (n === 0) {
     return;
   }
   while (true) {
     let r = shuffleArray(s);
-    for (var i = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
       yield r[i];
     }
   }
 }
 
 function outputCategories(outputSymbols) {
-  dst = {};
-  for (var i = 0; i < outputSymbols.length; i++) {
+  let dst = {};
+  for (let i = 0; i < outputSymbols.length; i++) {
     let c = outputSymbols[i];
     let j = characterCategory(c);
     if (j in dst) {
@@ -108,7 +108,7 @@ function outputCategories(outputSymbols) {
     }
   }
   let dstArray = [];
-  for (var k in dst) {
+  for (let k in dst) {
     dstArray.push(dst[k]);
   }
   return dstArray;
@@ -133,17 +133,17 @@ function allSubsets(n) {
 function sampleSubsets(sampleSize, subsetSize0, fullSetSize) {
   let subsetSize = Math.min(subsetSize0, fullSetSize);
   let subsets = allSubsets(fullSetSize).filter(function (subset) {
-    return subsetSize == subset.length;
+    return subsetSize === subset.length;
   });
   let dst = new Array(sampleSize);
   let ss = sampledSeq(subsets);
   let hist = new Array(fullSetSize);
-  for (var i = 0; i < fullSetSize; i++) {
+  for (let i = 0; i < fullSetSize; i++) {
     hist[i] = 0;
   }
 
   function evaluateSubset(subset) {
-    var cost = 0;
+    let cost = 0;
     subset.forEach(function (element) {
       cost += hist[element];
     });
@@ -151,26 +151,26 @@ function sampleSubsets(sampleSize, subsetSize0, fullSetSize) {
   }
 
   function pickSubset() {
-    var cands = [subsets[0]];
+    let cands = [subsets[0]];
     subsets.forEach(function (subset) {
       let cost = evaluateSubset(subset);
       let bestCost = evaluateSubset(cands[0]);
       if (cost < bestCost) {
         cands = [subset];
-      } else if (cost == bestCost) {
+      } else if (cost === bestCost) {
         cands.push(subset);
       }
     });
     return randNth(cands);
   }
 
-  for (var i = 0; i < sampleSize; i++) {
+  for (let i = 0; i < sampleSize; i++) {
     let subset = Array.from(pickSubset());
     subset.forEach(function (i) {
       hist[i] += 1;
     });
 
-    for (var j = subsetSize; j < subsetSize0; j++) {
+    for (let j = subsetSize; j < subsetSize0; j++) {
       subset.push(randInt(fullSetSize));
     }
 
@@ -193,9 +193,9 @@ function randomBalancedSample(inputSymbolCount, strlen, outputSymbols) {
 
   let seenStr = new Set();
   let dst = new Array(inputSymbolCount);
-  for (var i = 0; i < inputSymbolCount; i++) {
-    var x = null;
-    for (var j = 0; j < 5; j++) {
+  for (let i = 0; i < inputSymbolCount; i++) {
+    let x = null;
+    for (let j = 0; j < 5; j++) {
       x = inds2str(subsets[i]);
       if (!seenStr.has(x)) {
         break;
@@ -229,13 +229,13 @@ function test() {
     });
   }
   {
-    for (var i = 0; i < 40; i++) {
+    for (let i = 0; i < 40; i++) {
       let cs = colorSequence(i);
-      console.assert(cs.length == i);
+      console.assert(cs.length === i);
       if (2 <= i) {
-        for (var j = 0; j < i; j++) {
+        for (let j = 0; j < i; j++) {
           let next = (j + 1) % i;
-          console.assert(cs[j] != cs[next]);
+          console.assert(cs[j] !== cs[next]);
         }
       }
     }
@@ -259,7 +259,7 @@ function div1(a, b) {
 
 function colorSequence(stateCount) {
   let dst = new Array(stateCount);
-  if (stateCount == 0) {
+  if (stateCount === 0) {
     return dst;
   }
   let len = colors.length;
@@ -267,10 +267,10 @@ function colorSequence(stateCount) {
   let baseCount = div0(stateCount, cycleCount);
   let extra = stateCount - baseCount * cycleCount;
 
-  var at = 0;
-  for (var i = 0; i < cycleCount; i++) {
+  let at = 0;
+  for (let i = 0; i < cycleCount; i++) {
     let limit = baseCount + (i < extra ? 1 : 0);
-    for (var j = 0; j < limit; j++) {
+    for (let j = 0; j < limit; j++) {
       dst[at++] = colors[j];
     }
   }
@@ -326,9 +326,7 @@ function refreshUI() {
 let fsOutputRe = /fs_output(\d+)$/;
 
 function parseSymbols(src) {
-  return Array.from(src).map(function (c) {
-    return c;
-  });
+  return Array.from(src);
 }
 
 function splitStringBySpaces(src) {
@@ -338,7 +336,7 @@ function splitStringBySpaces(src) {
 function checkIOError(s, label) {
   if (/\s/.test(s)) {
     return 'No whitespace allowed';
-  } else if (s.length == 0) {
+  } else if (s.length === 0) {
     return 'Empty string for ' + label;
   } else {
     return null;
@@ -364,7 +362,7 @@ function getConfig() {
 
   let expectedOutputSpecLen = inputSpec.length + 1;
   let outputSpecError =
-    expectedOutputSpecLen == outputSpec.length
+    expectedOutputSpecLen === outputSpec.length
       ? null
       : 'Output spec has length ' +
         outputSpec.length +
@@ -480,7 +478,7 @@ class DrawingContext {
   }
 
   renderColoredSectors(cx, cy) {
-    for (var i = 0; i < this.stateCount; i++) {
+    for (let i = 0; i < this.stateCount; i++) {
       this.renderColoredSector(cx, cy, i);
     }
   }
@@ -491,7 +489,7 @@ class DrawingContext {
     let innerCircle = createCircle(cx, cy, innerRadius);
     this.svg.appendChild(outerCircle);
     this.svg.appendChild(innerCircle);
-    for (var i = 0; i < this.stateCount; i++) {
+    for (let i = 0; i < this.stateCount; i++) {
       let angle = this.angleAtIndex(i);
       let cosx = Math.cos(angle);
       let sinx = Math.sin(angle);
@@ -540,7 +538,7 @@ class DrawingContext {
   }
 
   renderSymbols(cx, cy, baseRadius, symbols, withCharColor) {
-    for (var i = 0; i < this.stateCount; i++) {
+    for (let i = 0; i < this.stateCount; i++) {
       let c = symbols[i];
       if (!c) {
         continue;
@@ -589,7 +587,7 @@ class DrawingContext {
       false
     );
     this.renderDisk(this.cx1, this.cy1, thickness);
-    for (var j = 0; j < maxOutLen; j++) {
+    for (let j = 0; j < maxOutLen; j++) {
       this.renderSymbols(
         this.cx1,
         this.cy1,
@@ -600,17 +598,17 @@ class DrawingContext {
     }
     this.renderLine(0, 'Input:  ' + cfg['inputSpec']);
     this.renderLine(1, 'Output:');
-    var lineCounter = 2;
+    let lineCounter = 2;
     let maxLine = 30;
-    var s = '';
-    var self = this;
+    let s = '';
+    let self = this;
     function emitLine() {
       if (0 < s.length) {
         self.renderLine(lineCounter++, s);
         s = '';
       }
     }
-    for (var i = 0; i < outputSpec.length; i++) {
+    for (let i = 0; i < outputSpec.length; i++) {
       s += outputSpec[i] + ' ';
       if (maxLine <= s.length) {
         emitLine();
@@ -633,8 +631,8 @@ function splitOutputSpec(outputSpec) {
     dst[i] = new Array(n);
   }
   for (let i = 0; i < n; i++) {
-    var s = outputSpec[i];
-    for (var j = 0; j < s.length; j++) {
+    let s = outputSpec[i];
+    for (let j = 0; j < s.length; j++) {
       dst[j][i] = s[j];
     }
   }

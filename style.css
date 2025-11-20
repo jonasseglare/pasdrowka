@@ -26,7 +26,7 @@ body {
 }
 
 textarea {
-    font-family: 'Fira Code';    
+    font-family: 'Fira Code', monospace;    
 }
 
 button {
@@ -34,10 +34,10 @@ button {
     padding: 1em;
     border: 1px solid gray;
     border-radius: 0.5em;
-    margin: 0em 0.8em;
+    margin: 0 0.8em;
 }
 
-// From https://github.com/kognise/water.css/blob/master/dist/light.css
+/* From https://github.com/kognise/water.css/blob/master/dist/light.css */
 button, input, textarea {
   transition: background-color 0.1s linear, border-color 0.1s linear, color 0.1s linear, box-shadow 0.1s linear, transform 0.1s ease;
 }
@@ -50,8 +50,8 @@ button:hover {
     #main {
         display: flex;
         flex-direction: row;
-        margin: 0px;
-        padding: 0em 0em;
+        margin: 0;
+        padding: 0;
         align-items: stretch;
     }
 }
@@ -104,7 +104,6 @@ button:hover {
 
 #mainconfig #strlen {
     width: max-content;
-    //box-sizing: content-box;
 }
 
 h1, h2, h3 {

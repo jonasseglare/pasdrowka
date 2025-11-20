@@ -59,9 +59,8 @@ button:hover {
 }
 
 #mainconfig {
-    width: 100%;
     box-sizing: border-box;
-    //flex: 0 1 50em;
+    flex: 1 1 70em;
     display: grid;
     grid-template-columns: auto 1fr;
     grid-template-rows: auto;

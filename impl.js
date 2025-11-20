@@ -796,13 +796,13 @@ function downloadSVG() {
 
 // Create and insert the buttons after the renderState button
 const printBtn = document.getElementById('printBtn');
-printBtn.textContent = 'Print SVG';
+//printBtn.textContent = 'Print SVG';
 printBtn.type = 'button';
 printBtn.style.marginLeft = '0.5em';
 printBtn.addEventListener('click', printSVG);
 
 const downloadBtn = document.getElementById('downloadBtn');
-downloadBtn.textContent = 'Download SVG';
+//downloadBtn.textContent = 'Download SVG';
 downloadBtn.type = 'button';
 downloadBtn.style.marginLeft = '0.5em';
 downloadBtn.addEventListener('click', downloadSVG);

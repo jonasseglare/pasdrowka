@@ -25,7 +25,7 @@ body {
     font-family: 'Open Sans', sans-serif;
 }
 
-textarea {
+textarea, tt {
     font-family: 'Fira Code', monospace;    
 }
 

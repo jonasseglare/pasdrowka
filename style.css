@@ -15,7 +15,7 @@ svg {
 }
 
 #content {
-    flex: 0 1 80em;
+    flex: 0 1 60em;
 }
 
 body {
@@ -60,7 +60,7 @@ button:hover {
 
 #mainconfig {
     box-sizing: border-box;
-    flex: 1 1 70em;
+    flex: 1 1 30em;
     display: grid;
     grid-template-columns: auto 1fr;
     grid-template-rows: auto;
@@ -70,7 +70,7 @@ button:hover {
 }
 
 #mainoutput {
-    flex: 0 1 30em;
+    flex: 0 1 15em;
 }
 
 

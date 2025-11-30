@@ -397,32 +397,33 @@ function getConfig() {
 
 let svgNS = 'http://www.w3.org/2000/svg';
 
-function createCircle(cx, cy, radius) {
+function createCircle(cx, cy, radius, strokeWidth) {
   let dst = document.createElementNS(svgNS, 'circle');
   dst.setAttribute('cx', cx);
   dst.setAttribute('cy', cy);
   dst.setAttribute('r', radius);
   dst.setAttribute('stroke', 'black');
-  dst.setAttribute('stroke-width', 0.25);
+  dst.setAttribute('stroke-width', strokeWidth);
   dst.setAttribute('fill', 'transparent');
   return dst;
 }
 
-function createLine(x0, y0, x1, y1) {
+function createLine(x0, y0, x1, y1, strokeWidth) {
   let dst = document.createElementNS(svgNS, 'line');
   dst.setAttribute('x1', x0);
   dst.setAttribute('y1', y0);
   dst.setAttribute('x2', x1);
   dst.setAttribute('y2', y1);
   dst.setAttribute('stroke', 'black');
-  dst.setAttribute('stroke-width', 0.25);
+  dst.setAttribute('stroke-width', strokeWidth);
   return dst;
 }
 
 class DrawingContext {
   constructor(svg, stateCount) {
-    let scale = 1.0;
+    let scale = 30.0 / 31.0;
     this.svg = svg;
+    this.strokeWidth = 0.12;
     this.margin = 7.5 * scale;
     this.outerRadius = 30 * scale;
     this.textHeight = 5.25 * scale;
@@ -438,12 +439,13 @@ class DrawingContext {
     this.cx1 = this.cx0;
     this.cy1 = this.cy0 + 2.0 * this.outerRadius + this.margin;
     this.dotRadius = 1.0 * scale;
-    this.coloredSectorRadius = 31 * scale;
+    this.sectorThickness = 3 * scale;
+    this.coloredSectorRadius = this.outerRadius + 0.5 * this.sectorThickness;
     this.sectorColors = colorSequence(this.stateCount);
-    this.sectorThickness = 2 * scale;
     this.width = 2 * (this.margin + this.outerRadius);
     this.textY = 3 * this.margin + 4 * this.outerRadius;
     this.baseHeight = this.textY + this.margin;
+    this.withCharColor = false;
   }
 
   computeHeight(lineCount) {
@@ -473,7 +475,8 @@ class DrawingContext {
     );
     dst.setAttribute('fill', 'none');
     dst.setAttribute('stroke', this.sectorColors[index]);
-    dst.setAttribute('stroke-with', this.sectorThickness);
+    console.log('Sector thickness', this.sectorThickness);
+    dst.setAttribute('stroke-width', this.sectorThickness);
     this.svg.appendChild(dst);
   }
 
@@ -485,8 +488,8 @@ class DrawingContext {
 
   renderDisk(cx, cy, thickness) {
     let innerRadius = this.outerRadius - thickness;
-    let outerCircle = createCircle(cx, cy, this.outerRadius);
-    let innerCircle = createCircle(cx, cy, innerRadius);
+    let outerCircle = createCircle(cx, cy, this.outerRadius, this.strokeWidth);
+    let innerCircle = createCircle(cx, cy, innerRadius, this.strokeWidth);
     this.svg.appendChild(outerCircle);
     this.svg.appendChild(innerCircle);
     for (let i = 0; i < this.stateCount; i++) {
@@ -497,7 +500,7 @@ class DrawingContext {
       let y0 = cy + innerRadius * sinx;
       let x1 = cx + this.outerRadius * cosx;
       let y1 = cy + this.outerRadius * sinx;
-      this.svg.appendChild(createLine(x0, y0, x1, y1));
+      this.svg.appendChild(createLine(x0, y0, x1, y1, this.strokeWidth));
     }
     this.svg.appendChild(
       threadFirst(
@@ -593,7 +596,7 @@ class DrawingContext {
         this.cy1,
         this.innerRadius - j * this.textHeight,
         splitOutput[j],
-        true
+        this.withCharColor
       );
     }
     this.renderLine(0, 'Input:  ' + cfg['inputSpec']);

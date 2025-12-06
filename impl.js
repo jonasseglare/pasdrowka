@@ -421,7 +421,7 @@ function createLine(x0, y0, x1, y1, strokeWidth) {
 
 class DrawingContext {
   constructor(svg, stateCount) {
-    let scale = 30.0 / 31.0;
+    let scale = 29.0 / 31.0;
     this.svg = svg;
     this.strokeWidth = 0.12;
     this.margin = 7.5 * scale;
@@ -438,7 +438,7 @@ class DrawingContext {
     this.cy0 = this.cx0;
     this.cx1 = this.cx0;
     this.cy1 = this.cy0 + 2.0 * this.outerRadius + this.margin;
-    this.dotRadius = 1.0 * scale;
+    this.dotRadius = 0.25 * scale;
     this.sectorThickness = 3 * scale;
     this.coloredSectorRadius = this.outerRadius + 0.5 * this.sectorThickness;
     this.sectorColors = colorSequence(this.stateCount);

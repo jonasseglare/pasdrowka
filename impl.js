@@ -5,6 +5,7 @@ const defaultStringLength = 2;
 
 let generateButton = document.getElementById('genbutton');
 let inputSpecEl = document.getElementById('inputspec');
+let widthEl = document.getElementById("physicalwidth");
 let outputSpecEl = document.getElementById('outputspec');
 let inputEl = document.getElementById('inputsymbols');
 let outputEl = document.getElementById('outputsymbols');
@@ -392,6 +393,7 @@ function getConfig() {
     inputSpecError: inputSpecError,
     outputSpecError: outputSpecError,
     specError: inputSpecError || outputSpecError ? true : false,
+    physicalWidth: widthEl.value
   };
 }
 
@@ -419,33 +421,56 @@ function createLine(x0, y0, x1, y1, strokeWidth) {
   return dst;
 }
 
+function createSquare(cx, cy, size, strokeWidth) {
+  let dst = document.createElementNS(svgNS, "rect");
+  dst.setAttribute("x", cx-size);
+  dst.setAttribute("y", cy-size);
+  dst.setAttribute("width", 2*size);
+  dst.setAttribute("height", 2*size);
+  dst.setAttribute("stroke", "black");
+  dst.setAttribute("stroke-width", strokeWidth);
+  dst.setAttribute("fill", "transparent");
+  return dst;
+}
+
 class DrawingContext {
-  constructor(svg, stateCount) {
-    let scale = 29.0 / 31.0;
+  constructor(svg, stateCount, scale0) {
+    this.scale = scale0 || 1;
     this.svg = svg;
-    this.strokeWidth = 0.12;
-    this.margin = 7.5 * scale;
-    this.outerRadius = 30 * scale;
-    this.textHeight = 5.25 * scale;
-    this.lineHeight = 7 * scale;
-    this.fontSize = 4.0 * scale;
+    this.strokeWidth = 0.12*this.scale;
+    this.margin = 10;
+    this.outerRadius = 30 * this.scale;
+    this.textHeight = 5.25 * this.scale;
+    this.lineHeight = 7 * this.scale;
+    this.fontSize = 4.0 * this.scale;
     this.innerRadius = this.outerRadius - this.textHeight;
+    this.sectorThickness = 3 * this.scale;
+    this.squareMargin = this.scale;
+    this.squareSize = this.outerRadius + this.sectorThickness + this.squareMargin;
+    this.coloredSectorRadius = this.outerRadius + 0.5 * this.sectorThickness;
+    this.tightWidth = 2.0*(this.squareSize + 0.5*this.strokeWidth);
+    console.log("Tight size: ", this.tightWidth);
+    this.overallSize = this.squareSize + this.squareMargin;
+
     this.svg = svg;
     this.stateCount = stateCount;
     this.angleStep = (2.0 * Math.PI) / this.stateCount;
-    let offset = this.margin + this.outerRadius;
+    let offset = this.margin + this.overallSize;
     this.cx0 = offset;
     this.cy0 = this.cx0;
     this.cx1 = this.cx0;
-    this.cy1 = this.cy0 + 2.0 * this.outerRadius + this.margin;
-    this.dotRadius = 0.25 * scale;
-    this.sectorThickness = 3 * scale;
-    this.coloredSectorRadius = this.outerRadius + 0.5 * this.sectorThickness;
+    this.cy1 = this.cy0 + 2.0 * this.overallSize + this.margin;
+    this.dotRadius = 0.25 * this.scale;
     this.sectorColors = colorSequence(this.stateCount);
-    this.width = 2 * (this.margin + this.outerRadius);
-    this.textY = 3 * this.margin + 4 * this.outerRadius;
+    this.width = 2 * (this.margin + this.overallSize);
+    this.textY = 3 * this.margin + 4 * this.overallSize + this.lineHeight;
     this.baseHeight = this.textY + this.margin;
     this.withCharColor = false;
+  }
+
+  fitSize(targetSize) {
+    let scale = targetSize/this.tightWidth;
+    return new DrawingContext(this.svg, this.stateCount, this.scale*scale);
   }
 
   computeHeight(lineCount) {
@@ -475,7 +500,6 @@ class DrawingContext {
     );
     dst.setAttribute('fill', 'none');
     dst.setAttribute('stroke', this.sectorColors[index]);
-    console.log('Sector thickness', this.sectorThickness);
     dst.setAttribute('stroke-width', this.sectorThickness);
     this.svg.appendChild(dst);
   }
@@ -599,6 +623,7 @@ class DrawingContext {
         this.withCharColor
       );
     }
+    this.svg.appendChild(createSquare(this.cx1, this.cy1, this.squareSize, this.strokeWidth));
     this.renderLine(0, 'Input:  ' + cfg['inputSpec']);
     this.renderLine(1, 'Output:');
     let lineCounter = 2;
@@ -645,7 +670,8 @@ function splitOutputSpec(outputSpec) {
 function renderState() {
   let cfg = getConfig();
   svgNode.replaceChildren();
-  let d = new DrawingContext(svgNode, cfg['stateCount']);
+  
+  let d = (new DrawingContext(svgNode, cfg['stateCount'])).fitSize(cfg["physicalWidth"]);
   let size = d.renderCfg(cfg);
   let width = size['width'];
   let height = size['height'];
@@ -790,7 +816,7 @@ function downloadSVG() {
   });
 });
 
-[inputSpecEl, outputSpecEl].forEach(function (el) {
+[inputSpecEl, outputSpecEl, widthEl].forEach(function (el) {
   el.addEventListener('input', function (e) {
     renderState();
     refreshUI();

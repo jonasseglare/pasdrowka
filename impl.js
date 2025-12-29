@@ -1,6 +1,6 @@
 const defaultInputSymbols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ-.';
 const defaultOutputSymbols =
-  'abcdefghijklmnpqrstuvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ123456789.,';
+  'abcdefghijklmnpqrstuvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ123456789.,=!?#+*';
 const defaultStringLength = 2;
 
 let generateButton = document.getElementById('genbutton');

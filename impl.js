@@ -544,7 +544,7 @@ class DrawingContext {
       [
         withAttribute,
         'font-family',
-        "'Fira Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'",
+        "'Latin Modern Mono', 'Computer Modern Typewriter', monospace",
       ]
     );
   }
@@ -667,10 +667,27 @@ function splitOutputSpec(outputSpec) {
   return dst;
 }
 
+function addFontStyleToSVG(svg) {
+  // Remove existing style if present
+  let existingStyle = svg.querySelector('defs style');
+  if (existingStyle) {
+    existingStyle.parentElement.remove();
+  }
+
+  // Create defs and style elements
+  let defs = document.createElementNS(svgNS, 'defs');
+  let style = document.createElementNS(svgNS, 'style');
+  style.textContent = `
+    @import url('https://cdn.jsdelivr.net/gh/aaaakshat/cm-web-fonts@latest/fonts.css');
+  `;
+  defs.appendChild(style);
+  svg.insertBefore(defs, svg.firstChild);
+}
+
 function renderState() {
   let cfg = getConfig();
   svgNode.replaceChildren();
-  
+
   let d = (new DrawingContext(svgNode, cfg['stateCount'])).fitSize(cfg["physicalWidth"]);
   let size = d.renderCfg(cfg);
   let width = size['width'];
@@ -678,6 +695,7 @@ function renderState() {
   svgNode.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
   svgNode.setAttribute('width', '100%');
   svgNode.removeAttribute('height');
+  addFontStyleToSVG(svgNode);
 }
 
 function generate() {
@@ -743,11 +761,13 @@ function withFullSvg(f) {
 // Add Print SVG button
 function printSVG() {
   withFullSvg(function (svg) {
+    addFontStyleToSVG(svg);
     const win = window.open('', '_blank');
     win.document.write(`<!DOCTYPE html>
 <html>
 <head>
   <title>Print SVG</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/aaaakshat/cm-web-fonts@latest/fonts.css">
   <style>
     @page {
       margin: 0;
@@ -787,7 +807,14 @@ function printSVG() {
     }
   </style>
 </head>
-<body>${svg.outerHTML}<script>window.onload=function(){window.print();}</script></body>
+<body>${svg.outerHTML}<script>
+  // Wait for fonts to load before printing
+  document.fonts.ready.then(function() {
+    setTimeout(function() {
+      window.print();
+    }, 100);
+  });
+</script></body>
 </html>`);
     win.document.close();
   });
@@ -797,6 +824,7 @@ function printSVG() {
 function downloadSVG() {
   withFullSvg(function (svg) {
     if (!svg) return;
+    addFontStyleToSVG(svg);
     const svgData = new XMLSerializer().serializeToString(svg);
     const blob = new Blob([svgData], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
